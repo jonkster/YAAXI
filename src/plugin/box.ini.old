@@ -1,0 +1,66 @@
+# Configuration 
+# 
+# TYPE:
+# 	C = Control (eg switch on box etc)
+# 	D = Display (eg LED on BOX or instrument etc)	
+# 
+# Control INI entries
+# --------------------
+# 
+# React to a message sent from the box
+# 
+# Format:
+# 	C:DEVICE:CMD IF TRUE:CMD IF FALSE:RESERVED
+# eg:
+# 	C:TOGGLE0:sim/fuel/fuel_pump_1_on:sim/fuel/fuel_pump_1_off:
+# 
+#	RESERVED - leave blank
+# 
+# Display INI entries
+# -------------------
+# 
+# Send data to box if a dataref value changes
+# 	
+# Format:
+# 	D:DEVICE:DataRef:INDEX:LOGIC:RESERVED
+# 
+# 	LOGIC field can be blank if no logic needed
+#	RESERVED - leave blank
+# where
+#	INDEX = index of wanted value in array if dataref a vector
+# 	LOGIC:
+# 		TEST?value if true,value if false
+# 		eg
+#		 	EQ 0?1,0
+#		 	if dataref value == 0 send a 1 else send a 0
+# 
+#		 	GT 10?1,0
+#		 	if dataref value > 0 send a 1 else send a 0
+# 
+# 		comparison operators:
+# 		EQ
+# 		GT
+# 		LT
+# 		GTE
+# 		LTE
+# 	
+#
+# eg:
+# 	D:LED0:sim/cockpit/warnings/annunciators/gear_unsafe:::
+# 	D:LED1:sim/flightmodel/2/gear/deploy_ratio:0:EQ 0?1,0:
+# 
+# 	
+# 
+# 
+
+# Commands (from Box)
+C:TOGGLE0:sim/fuel/fuel_pump_1_on:sim/fuel/fuel_pump_1_off:
+C:TOGGLE1:sim/fuel/fuel_pump_2_on:sim/fuel/fuel_pump_2_off:
+C:KNOB0:sim/autopilot/heading_down:sim/autopilot/heading_up:
+C:KNOB1:sim/radios/obs1_down:sim/radios/obs1_up:
+
+# Display (data to box)
+D:LED0:sim/cockpit/warnings/annunciators/gear_unsafe:::
+D:LED1:sim/flightmodel/2/gear/deploy_ratio:0:EQ 1?1,0:
+D:LED2:sim/flightmodel/2/gear/deploy_ratio:1:EQ 1?1,0:
+D:LED3:sim/flightmodel/2/gear/deploy_ratio:2:EQ 1?1,0:

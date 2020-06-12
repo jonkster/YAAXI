@@ -1,0 +1,96 @@
+ArduinoBroker is an X-Plane plugin that communicates with an Arduino.
+
+Plugin interprets messages from the arduino box using an ini file that follows
+the syntax below:
+
+
+Configuration 
+===============
+ 
+ TYPE:
+ 	C = Control (eg switch on box etc)
+ 	D = Display (eg LED on BOX or instrument etc)	
+	I = send vale to device
+ 
+ Control INI entries
+ --------------------
+ 
+ React to a message sent from the box
+ 
+ Format:
+ 	C:DEVICE:CMD IF TRUE:CMD IF FALSE:RESERVED
+ eg:
+ 	C:TOGGLE0:sim/fuel/fuel_pump_1_on:sim/fuel/fuel_pump_1_off:
+ 
+	RESERVED - leave blank
+ 
+ Display INI entries
+ -------------------
+ 
+ Send data to box if a dataref value changes
+ 	
+ Format:
+ 	D:DEVICE:DataRef:INDEX:LOGIC:RESERVED
+ 
+ 	LOGIC field can be blank if no logic needed
+	RESERVED - leave blank
+ where
+	INDEX = index of wanted value in array if dataref a vector
+ 	LOGIC:
+ 		TEST?value if true,value if false
+ 		eg
+		 	EQ 0?1,0
+		 	if dataref value == 0 send a 1 else send a 0
+ 
+		 	GT 10?1,0
+		 	if dataref value > 0 send a 1 else send a 0
+ 
+ 		comparison operators:
+ 		EQ
+ 		GT
+ 		LT
+ 		GTE
+ 		LTE
+ 		CHG
+ 		EXACT
+ 	
+
+ eg:
+ 	D:LED0:sim/cockpit/warnings/annunciators/gear_unsafe:::
+ 	D:LED1:sim/flightmodel/2/gear/deploy_ratio:0:EQ 0?1,0:
+ 
+ 	
+ 
+ 
+
+Example:
+=========
+
+# Initial values to box
+I:LED0:0
+I:LED1:0
+I:LED2:0
+I:LED3:0
+I:LED4:0
+I:LED5:0
+
+# What to do with messages from box
+C:TOGGLE0:sim/fuel/fuel_pump_1_on:sim/fuel/fuel_pump_1_off:
+C:TOGGLE1:sim/fuel/fuel_pump_2_on:sim/fuel/fuel_pump_2_off:
+C:KNOB0:sim/radios/obs1_up:sim/radios/obs1_down:
+C:KNOB1:sim/autopilot/heading_down:sim/autopilot/heading_up:
+C:PUSH0:sim/instruments/timer_reset::
+C:PUSH1:sim/instruments/timer_start_stop::
+C:PUSH2:sim/GPS/g430n1_cdi::
+C:PUSH3:sim/GPS/g430n1_obs::
+C:TWIST0:sim/autopilot/hsi_select_down:sim/autopilot/hsi_select_up:
+C:TWIST1:sim/autopilot/hsi_select_up:sim/autopilot/hsi_select_down:
+
+# What to send to box
+D:LED1:sim/flightmodel/controls/flaprat::EQ 0.400000?1,0:
+D:LED3:sim/flightmodel/controls/flaprat::EQ 1.000000?1,0:
+D:LED0:sim/flightmodel/controls/flaprat::CHG?1,0:
+
+D:LED4:sim/cockpit/warnings/annunciators/gear_unsafe::EXACT?,:
+D:LED5:sim/flightmodel2/gear/deploy_ratio:0:EQ 1?1,0:
+
