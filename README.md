@@ -18,21 +18,21 @@ switches, LEDs, rotary encoders, LCD displays etc.
 
 Devices are classified as either:
 
-Controls (eg switches etc) that are designed to send data to X Plane.
+ - Controls (eg switches etc) that are designed to send data to X Plane.
 
-Displays (eg LEDs, LCD displays etc) that are designed to display information
+ - Displays (eg LEDs, LCD displays etc) that are designed to display information
 sent from X Plane.
 
 An Arduino box can have a mixture of control and display devices.
 
 X Plane requies a plug in that can interact with one or more "Boxes".
 
-Configuring what X Plane should do with control data sen to it and also what
-display data it needs to send to the box is done with a configuration file (or
-files).
+Configuring what X Plane should do with control data sent to it and also what
+display data it needs to send to the box, is done with a configuration file (or
+files) located with the X Plane Plugin.
 
-The configuration file should be reasonably simple to set up, it will list each
-device on a box with instructions about:
+The configuration file is simple text and should be reasonably simple to set
+up, it will list each device on a box with instructions about:
 
   - what X Plane Commands correspond to messages from box controls
   - what X-Plane data ref data should be sent to the box for display
