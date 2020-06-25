@@ -10,7 +10,7 @@ unsigned int xpPort = 8889;
 EthernetUDP	Udp;
 
 bool foundXP = false;
-bool verbose = false;
+bool verbose = true;
 
 
 void setupEthernet() {

@@ -12,11 +12,11 @@ volatile unsigned long lastIntTime = 0;
 #define BOUNCE_DELAY 0
 
 int getEncValue(int encNumber) {
-	float factor = 1.3;
+	float factor = 2.0;
 	if (encNumber == 0) {
-		return v0 / factor;
+		return v0/factor;
 	}
-	return v1 / factor;
+	return v1/factor;
 }
 
 void calculateChange(unsigned int encNumber) {

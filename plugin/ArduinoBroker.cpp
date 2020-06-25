@@ -73,9 +73,10 @@ void		addLogMessageInt(const char* msg, const int extra);
 void		closeSocket(const int);
 void		handleBoxIdMsg(const char* msg);
 static void	menuHandlerCallback(void*, void*); 
+void		parseAddressEntry(std::string);
 void		parseControlEntry(std::string);
 void		parseDisplayEntry(std::string);
-void		parseInitialEntry(std::string line);
+void		parseInitialEntry(std::string);
 bool 		readIniFile();
 void 		sendAnyChangesToBox();
 
@@ -107,20 +108,21 @@ PLUGIN_API int XPluginStart( char *  outName, char *  outSig, char *  outDesc)
 	XPLMAppendMenuItem(myMenu, "Pause/Unpause Plugin", (void *) CMD_PAUSEPI, 1);
 	XPLMAppendMenuItem(myMenu, "(Re)Read INI file", (void *) CMD_READINI, 1);
 
+	if (! readIniFile()) {
+		addLogMessage("could not read ini file", INI_DEFAULT_PATH);
+	}
+
 	if (initialiseSocket(NULL, ARDUINO_READ_PORT, readSock, listenSockAddr, true) < 0) {
 		addLogMessage("Could not initialise arduino reading socket?", "");
 	} else {
 		addLogMessage("Initialised arduino reading socket", "");
 	}
 
-	if (initialiseSocket(ARDUINO_IP, ARDUINO_WRITE_PORT, writeSock, talkSockAddr, false) < 0) {
+	/*if (initialiseSocket(ARDUINO_IP, ARDUINO_WRITE_PORT, writeSock, talkSockAddr, false) < 0) {
 		addLogMessage("Could not initialise arduino writing socket?", "");
 	} else {
 		addLogMessage("Initialised arduino writing socket", "");
-	}
-	if (! readIniFile()) {
-		addLogMessage("could not read ini file", INI_DEFAULT_PATH);
-	}
+	}*/
 
 	// main loop
 	XPLMRegisterFlightLoopCallback(
@@ -150,10 +152,13 @@ PLUGIN_API void XPluginReceiveMessage( XPLMPluginID inFromWho, int inMessage, vo
 
 /******************************************************************************************************/
 #include <bits/stdc++.h>
+std::map<std::string,  std::string> ardIPs; 
+
 std::map<std::string,  XPLMCommandRef> controlConfigCommandOn; 
 std::map<std::string,  XPLMCommandRef> controlConfigCommandOff; 
 
 std::map<std::string,  XPLMDataRef> dataRefs; 
+std::map<std::string,  std::string> boxDevices; 
 std::map<std::string,  int> dataRefIndex; 
 std::map<std::string,  std::string> dataRefLogic; 
 std::map<std::string,  std::string> lastValue; 
@@ -200,7 +205,7 @@ int initialiseSocket(const char* ip, const int port, int& sock, struct sockaddr_
 	return 0;
 }
 
-void sendArduino(const char* msg) {
+void sendArduino(const char* msg, int writeSock, struct sockaddr_in talkSockAddr) {
 	int res = sendto(
 			writeSock,
 			msg,
@@ -211,12 +216,45 @@ void sendArduino(const char* msg) {
 	if (res < 0) {
 		addLogMessage("failed to send to box. Error#", strerror(errno));
 	} else {
-		//addLogMessage("Sending to box: ", msg);
+		addLogMessage("Sending to box: ", msg);
 	}
 }
 
-void handlePluginFishMsg(const char* msg) {
-	sendArduino("Avduino Box Fish");
+void sendArduinoAtAddress(struct sockaddr_in cliAddr, const char* msg) {
+	int writeSock = -1;
+	char* addr = inet_ntoa(cliAddr.sin_addr);
+	struct sockaddr_in talkSockAddr;
+	if (initialiseSocket(addr, ARDUINO_WRITE_PORT, writeSock, talkSockAddr, false) < 0) {
+		addLogMessage("failed to initialise addr. ", addr);
+	} else {
+		sendArduino(msg, writeSock, talkSockAddr);
+		closeSocket(writeSock);
+		return;
+	}
+	addLogMessage("failed to send to address: ", addr);
+}
+
+void sendArduinoBox(std::string boxName, const char* msg) {
+	std::map<std::string, std::string>::iterator it;
+	it = ardIPs.find(boxName);
+	if (it != ardIPs.end()) {
+		std::string ipAddress = it->second;
+		int writeSock = -1;
+		struct sockaddr_in talkSockAddr;
+		if (initialiseSocket(ipAddress.c_str(), ARDUINO_WRITE_PORT, writeSock, talkSockAddr, false) < 0) {
+			addLogMessage("failed to initialise box addr. ", ipAddress.c_str());
+		} else {
+			sendArduino(msg, writeSock, talkSockAddr);
+			closeSocket(writeSock);
+			return;
+		}
+	}
+	addLogMessage("failed to send to box: ", boxName.c_str());
+}
+
+
+void handlePluginFishMsg(const char* msg, struct sockaddr_in cliAddr) {
+	sendArduinoAtAddress(cliAddr, "Avduino Box Fish");
 }
 
 void handleBoxIdMsg(const char* msg) {
@@ -252,12 +290,12 @@ void handleBoxChangeMsg(const char* msg) {
 
 
 
-void actOnBoxMessage(const int sock, const char* msg, struct sockaddr_in cliaddr) {
+void actOnBoxMessage(const int sock, const char* msg, struct sockaddr_in cliAddr) {
 	if (strlen(msg) == 0) {
 		// null msg??
 	} else if (strncmp(msg, "XP Plugin Fish", 14) == 0) {
 		// box is fishing for an XPlane plugin
-		handlePluginFishMsg(msg);
+		handlePluginFishMsg(msg, cliAddr);
 	} else if (strncmp(msg, "BOXID:", 6) == 0) {
 		// box has sent details about itself
 		handleBoxIdMsg(msg);
@@ -280,7 +318,7 @@ void listenForArduinos(const int sock) {
 
 	if (result > 0) {
 		rxBuf[result] = '\0';
-		//addLogMessage("got message from box:", rxBuf);
+		addLogMessage("got message from box:", rxBuf);
 		actOnBoxMessage(sock, rxBuf, cliaddr);
 	} else if (result == 0) {
 		addLogMessage("got empty msg??:", "");
@@ -400,8 +438,10 @@ void iniLineParse(std::string line) {
 				parseControlEntry(cleanLine);
     			} else if ((type == "D") || (type == "d")) {
 				parseDisplayEntry(cleanLine);
-    			} else if ((type == "I") || (type == "I")) {
+    			} else if ((type == "I") || (type == "i")) {
 				parseInitialEntry(cleanLine);
+    			} else if ((type == "A") || (type == "a")) {
+				parseAddressEntry(cleanLine);
     			} else {
 				addLogMessage("ignoring line, expected 'C' or 'D': ", type.c_str());
 			}
@@ -411,6 +451,25 @@ void iniLineParse(std::string line) {
 	}
 }
 
+void parseAddressEntry(std::string line) {
+	int pos;
+	if ((pos = line.find(":")) != std::string::npos) {
+		std::string boxName = line.substr(0, pos).c_str();
+		line.erase(0, pos + 1);
+		std::string ipAddress;
+		if ((pos = line.find(":")) != std::string::npos) {
+			std::string ipAddress = line.substr(0, pos).c_str();
+			std::stringstream msg("");
+			msg << "adding IP address " << ipAddress << " for box named: " << boxName;
+			addLogMessage(msg.str().c_str(), "");
+			int sock = -1;
+			ardIPs.insert({boxName, ipAddress});
+			return;
+		}
+	}
+	addLogMessage("ignoring line, expected box ip address, could not parse: ", line.c_str());
+
+}
 
 void parseControlEntry(std::string line) {
 	int pos;
@@ -453,9 +512,12 @@ void parseDisplayEntry(std::string line) {
 				if ((pos = line.find(":")) != std::string::npos) {
 					std::string logic = line.substr(0, pos).c_str();
 					line.erase(0, pos + 1);
+					std::string boxName = line;
+					addLogMessage(boxName.c_str(), device.c_str());
 
 					XPLMDataRef dataRef = XPLMFindDataRef(dataRefSt.c_str());
 					dataRefs.insert({device, dataRef});
+					boxDevices.insert({device, boxName});
 					if (index == "") {
 						index = "-1";
 					}
@@ -482,8 +544,18 @@ void parseInitialEntry(std::string line) {
 	if ((pos = line.find(":")) != std::string::npos) {
 		std::string device = line.substr(0, pos).c_str();
 		line.erase(0, pos + 1);
-		sendArduino((device + ":" + line).c_str());
+		if ((pos = line.find(":")) != std::string::npos) {
+			std::string value = line.substr(0, pos).c_str();
+			line.erase(0, pos + 1);
+			std::string boxName = line;
+			std::stringstream msg("");
+		        msg << "setting initial value of box " << boxName << " to: " << value;
+			addLogMessage(msg.str().c_str(), "");
+			sendArduinoBox(boxName, (device + ":" + value).c_str());
+			return;
+		}
 	}
+	addLogMessage("ignoring line, expected inital setting, could not parse: ", line.c_str());
 }
 
 void eraseIniData() {
@@ -571,14 +643,14 @@ std::string getValueByIndex(std::string value, int index) {
 	return value;
 }
 
-void calculateResponse(std::string device, std::string oldValue, std::string currentValue, std::string logic) {
+void calculateResponse(std::string boxName, std::string device, std::string oldValue, std::string currentValue, std::string logic) {
 	std::string op = getLogicOperator(logic);
 	std::string opCode = getOpCode(op);
 	std::string trueResponse = getTrueValue(logic);
 	std::string falseResponse = getFalseValue(logic);
 	if (oldValue != currentValue) {
 		if (opCode == "CHG") {
-			sendArduino((device + ":" + trueResponse).c_str());
+			sendArduinoBox(boxName, (device + ":" + trueResponse).c_str());
 		} else {
 			std::map<std::string, int>::iterator iit = dataRefIndex.find(device);
 			if (iit != dataRefIndex.end()) {
@@ -589,7 +661,7 @@ void calculateResponse(std::string device, std::string oldValue, std::string cur
 				if (opCode == "EQ") {
 					match = currentValue == opValue;
 				} else if (opCode == "EXACT") {
-					sendArduino((device + ":" + currentValue).c_str());
+					sendArduinoBox(boxName, (device + ":" + currentValue).c_str());
 				} else if (opCode == "GT") {
 					match = currentValue > opValue;
 				} else if (opCode == "LT") {
@@ -604,36 +676,47 @@ void calculateResponse(std::string device, std::string oldValue, std::string cur
 				}
 				if (match) {
 
-					sendArduino((device + ":" + trueResponse).c_str());
+					sendArduinoBox(boxName, (device + ":" + trueResponse).c_str());
 				} else {
-					sendArduino((device + ":" + falseResponse).c_str());
+					sendArduinoBox(boxName, (device + ":" + falseResponse).c_str());
 				}
 			}
 		}
 	} else {
 		if (opCode == "CHG") {
-			sendArduino((device + ":" + falseResponse).c_str());
+			sendArduinoBox(boxName, (device + ":" + falseResponse).c_str());
 		}
 	}
+}
+
+std::string getBoxDevice(std::string device) {
+	std::map<std::string, std::string>::iterator it = boxDevices.find(device);
+	if (it != boxDevices.end()) {
+		return it->second;
+	}
+	return "";
 }
 
 void sendAnyChangesToBox() {
 	std::map<std::string, XPLMDataRef>::iterator v = dataRefs.begin();
 	while (v != dataRefs.end()) {
 		std::string device = v->first;
-		XPLMDataRef dataRef = v->second;
-		std::string value = getDataRefValue(dataRef);
-		std::map<std::string, std::string>::iterator last = lastValue.find(device);
-		// do we have a 'last' value?
-		if (last != lastValue.end()) {
-			std::map<std::string, std::string>::iterator lit = dataRefLogic.find(device);
-			if (lit != dataRefLogic.end()) {
-				std::string logic = lit->second;
-				calculateResponse(device, last->second, value, logic);
-				// update 'last' value
-				last->second = value;
+		std::string boxName = getBoxDevice(device);
+		if (boxName != "") {
+			XPLMDataRef dataRef = v->second;
+			std::string value = getDataRefValue(dataRef);
+			std::map<std::string, std::string>::iterator last = lastValue.find(device);
+			// do we have a 'last' value?
+			if (last != lastValue.end()) {
+				std::map<std::string, std::string>::iterator lit = dataRefLogic.find(device);
+				if (lit != dataRefLogic.end()) {
+					std::string logic = lit->second;
+					calculateResponse(boxName, device, last->second, value, logic);
+					// update 'last' value
+					last->second = value;
+				}
+			} else {
 			}
-		} else {
 		}
 		v++;
 	}
