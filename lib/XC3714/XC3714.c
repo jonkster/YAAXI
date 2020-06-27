@@ -41,6 +41,9 @@ void blankAll(int unitNumber) {
 		blankDigit(unitNumber, i + 1);		//blank all
 	}
 }
+void MAX7219blankAll(int unitNumber) {
+	blankAll(unitNumber);
+}
 
 void MAX7219init(int unitNumber, int csPin, int clkPin, int dataPin) {
 	pinMode(csPin, OUTPUT);
@@ -94,16 +97,53 @@ unsigned int getSymCode(char n) {
 		case '7': return 0b01110000;
 		case '8': return 0b01111111;
 		case '9': return 0b01110011;
-		case 'E': return 0b00011111;
+		case '.': return 0b10000000;
 		case '-': return 0b00000001;
-		case '|': return 0b01100000;
+		case '|': return 0b00000110;
 		case 'A': return 0b01110111;
+		case 'B': return 0b00111111;
 		case 'C': return 0b01001110;
+		case 'D': return 0b00111101;
+		case 'E': return 0b01001111;
+		case 'F': return 0b01000111;
+		case 'G': return 0b01111100;
+		case 'H': return 0b00110111;
+		case 'I': return 0b00110000;
+		case 'J': return 0b00111000;
+		case 'K': return 0b00001111;
+		case 'L': return 0b00001110;
 		case 'N': return 0b01110110;
+		case 'O': return 0b01111110;
+		case 'P': return 0b01100111;
+		case 'R': return 0b00000101;
+		case 'S': return 0b00101101;
+		case 'T': return 0b00110001;
+		case 'U': return 0b00111110;
+		case 'Y': return 0b00011011;
+		case 'Z': return 0b01101101;
+		case 'a': return 0b01110111;
+		case 'b': return 0b00011111;
 		case 'c': return 0b00001101;
+		case 'd': return 0b00111101;
+		case 'e': return 0b01001111;
+		case 'f': return 0b01000111;
+		case 'g': return 0b01111011;
+		case 'h': return 0b00010111;
 		case 'i': return 0b00000100;
+		case 'j': return 0b00111000;
+		case 'k': return 0b00001111;
+		case 'l': return 0b00001110;
 		case 'n': return 0b00010101;
+		case 'o': return 0b00011101;
+		case 'p': return 0b01100111;
+		case 'r': return 0b00000101;
+		case 's': return 0b00101101;
+		case 't': return 0b00110001;
+		case 'u': return 0b00011100;
+		case 'y': return 0b00011011;
+		case 'z': return 0b01101101;
 		case '~': return 0b00010100;
+		default: return getSymCode('.');
 	}
 	return 0;
 }
@@ -113,6 +153,15 @@ void MAX7219showSymAtDigit(int unitNumber, int digit, char sym){
 	MAX7219senddata(unitNumber, digit+1, s);        
 }
 
+void MAX7219showText(int unitNumber, const char* text) {
+	blankAll(unitNumber);
+	for (int i = 0; i < strlen(text); i++) {
+		char c = text[i];
+		if (i < 8) {
+			MAX7219showSymAtDigit(unitNumber, 7 - i, c);
+		}
+	}
+}
 
 void MAX7219shownum(int unitNumber, unsigned long n, const int dpPos){
 	blankAll(unitNumber);
