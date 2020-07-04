@@ -11,16 +11,15 @@ bool stateChanged = false;
 struct tBoxState readCurrentBoxState();
 //
 // Use software SPI 
-TFT_22_ILI9225 tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_SDI, TFT_CLK, TFT_LED);
+//TFT_22_ILI9225 tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_SDI, TFT_CLK, TFT_LED);
 
 // hardware SPI (faster - on Mega: 52-SCK, 50-MISO, 51-MOSI)
-//TFT_22_ILI9225 tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED);
+TFT_22_ILI9225 tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED);
 
 bool knobStateChanged() {
 	bool changed = false;
 	struct tBoxState currentState = readCurrentBoxState();
-	if (currentState.knob00 != boxState.knob00) changed = true;
-	if (currentState.knob01 != boxState.knob01) changed = true;
+	if (currentState.long00 != boxState.long00) changed = true;
 	if (changed) {
 		boxState = currentState;
 	}
@@ -151,11 +150,7 @@ void displayBoxState(struct tBoxState state) {
 	Serial.print("sw06: "); Serial.println(state.sw06);
 	Serial.print("sw07: "); Serial.println(state.sw07);
 	Serial.print("sw08: "); Serial.println(state.sw08);
-	Serial.print("sw09: "); Serial.println(state.sw09);
-	Serial.print("sw10: "); Serial.println(state.sw10);
-	Serial.print("sw11: "); Serial.println(state.sw11);
-	Serial.print("knob00: "); Serial.println(state.knob00);
-	Serial.print("knob01: "); Serial.println(state.knob01);
+	Serial.print("long00: "); Serial.println(state.long00);
 	Serial.println("-------------------------------");
 }
 
@@ -243,8 +238,7 @@ struct tBoxState readCurrentBoxState() {
 	currentState.sw06 = getSwitchState(AP_ALT);
 	currentState.sw07 = getSwitchState(AP_UP);
 	currentState.sw08 = getSwitchState(AP_DN);
-	currentState.knob00 = getEncoderValue(0);
-	currentState.knob01 = getEncoderValue(1);
+	currentState.long00 = readDigits();
 	return currentState;
 }
 

@@ -60,72 +60,44 @@ void setup(){
 void sendAnyChanges(struct tBoxState state) {
 	char msg[48];
 	if (lastState.sw00 != state.sw00) {
-		snprintf(msg, sizeof(msg), "CDI:%i\n", state.sw00);
+		snprintf(msg, sizeof(msg), "AP_ON:%i\n", state.sw00);
 		sendMessage(msg);
 	}
 	if (lastState.sw01 != state.sw01) {
-		snprintf(msg, sizeof(msg), "OBS:%i\n", state.sw01);
+		snprintf(msg, sizeof(msg), "AP_FD:%i\n", state.sw01);
 		sendMessage(msg);
 	}
 	if (lastState.sw02 != state.sw02) {
-		snprintf(msg, sizeof(msg), "MSG:%i\n", state.sw02);
+		snprintf(msg, sizeof(msg), "AP_HDG:%i\n", state.sw02);
 		sendMessage(msg);
 	}
 	if (lastState.sw03 != state.sw03) {
-		snprintf(msg, sizeof(msg), "FPL:%i\n", state.sw03);
+		snprintf(msg, sizeof(msg), "AP_NAV:%i\n", state.sw03);
 		sendMessage(msg);
 	}
 	if (lastState.sw04 != state.sw04) {
-		snprintf(msg, sizeof(msg), "PROC:%i\n", state.sw04);
+		snprintf(msg, sizeof(msg), "AP_APR:%i\n", state.sw04);
 		sendMessage(msg);
 	}
 	if (lastState.sw05 != state.sw05) {
-		snprintf(msg, sizeof(msg), "ENTER:%i\n", state.sw05);
+		snprintf(msg, sizeof(msg), "AP_VS:%i\n", state.sw05);
 		sendMessage(msg);
 	}
 	if (lastState.sw06 != state.sw06) {
-		snprintf(msg, sizeof(msg), "CLR:%i\n", state.sw06);
+		snprintf(msg, sizeof(msg), "AP_ALT:%i\n", state.sw06);
 		sendMessage(msg);
 	}
 	if (lastState.sw07 != state.sw07) {
-		snprintf(msg, sizeof(msg), "MENU:%i\n", state.sw07);
+		snprintf(msg, sizeof(msg), "AP_UP:%i\n", state.sw07);
 		sendMessage(msg);
 	}
 	if (lastState.sw08 != state.sw08) {
-		snprintf(msg, sizeof(msg), "DTO:%i\n", state.sw08);
+		snprintf(msg, sizeof(msg), "AP_DN:%i\n", state.sw08);
 		sendMessage(msg);
 	}
-	if (lastState.sw09 != state.sw09) {
-		snprintf(msg, sizeof(msg), "CRSR:%i\n", state.sw09);
+	if (lastState.long00 != state.long00) {
+		snprintf(msg, sizeof(msg), "ALT_ASSIGNED:%li\n", state.long00);
 		sendMessage(msg);
-	}
-	if (lastState.sw10 != state.sw10) {
-		snprintf(msg, sizeof(msg), "RNG-IN:%i\n", state.sw10);
-		sendMessage(msg);
-	}
-	if (lastState.sw11 != state.sw11) {
-		snprintf(msg, sizeof(msg), "RNG-OUT:%i\n", state.sw11);
-		sendMessage(msg);
-	}
-	if (lastState.knob00 != state.knob00) {
-		int delta = state.knob00 - lastState.knob00;
-		if (delta > 0) {
-			snprintf(msg, sizeof(msg), "OUTER_NAV_KNOB:%i\n", 1);
-			sendMessage(msg);
-		} else if (delta < 0) {
-			snprintf(msg, sizeof(msg), "OUTER_NAV_KNOB:%i\n", 0);
-			sendMessage(msg);
-		}
-	}
-	if (lastState.knob01 != state.knob01) {
-		int delta = state.knob01 - lastState.knob01;
-		if (delta > 0) {
-			snprintf(msg, sizeof(msg), "INNER_NAV_KNOB:%i\n", 1);
-			sendMessage(msg);
-		} else if (delta < 0) {
-			snprintf(msg, sizeof(msg), "INNER_NAV_KNOB:%i\n", 0);
-			sendMessage(msg);
-		}
 	}
 }
 
