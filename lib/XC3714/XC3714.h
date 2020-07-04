@@ -24,10 +24,13 @@ extern "C" {
 void MAX7219brightness(int unitNumber, byte b);
 
 //void blankDigit(int unitNumber, const int);
+void MAX7219blankAll(int unitNumber);
 
 int MAX7219addDisplay(int csPin, int clkPin, int dataPin);
 
 void MAX7219showSymAtDigit(int unitNumber, int digit, char sym);
+
+void MAX7219showText(int unitNumber, const char* text);
 
 void MAX7219shownum(int, unsigned long, const int);
 
