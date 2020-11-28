@@ -1,12 +1,14 @@
-// include the library code:
 #include <Arduino.h>
-//#include <SPI.h>
-//#include <Wire.h>
 #include <LiquidCrystal.h>
 #include <avr/interrupt.h>
 #include "encoderlib.h"
+#include "communication.h"
 
 
+#define BOXID "BOXID:Motion Capture-CN001A-00000"
+#define BOX_DEFINITIONS "C1USE-CF,C1STBY-CF,C2USE-CF,C2STBY-CF,N1USE-CF,N1STBY-CF,N2USE-CF,N2STBY-CF"
+#define MSG_BOX_FISH "Avduino Box Fish"
+#define MSG_XP_PLUGIN_FISH "XP Plugin Fish"
 
 // PIN ASSIGNMENTS
 #define FF_SWITCH_PUSH 24
@@ -58,8 +60,70 @@ int activeDisplay = 0;
 LiquidCrystal lcd0(RS_0, RW_0, EN_0, D4_0, D5_0, D6_0, D7_0);
 LiquidCrystal lcd1(RS_1, RW_1, EN_1, D4_1, D5_1, D6_1, D7_1);
 
+void setControl(char* device, char* value) {
+	float v = atof(value);
+	if (strcmp("C1USE", device) == 0) {
+		c1Use = v;	
+	} else if (strcmp("C1STBY", device) == 0) {
+		c1Stb = v;	
+	} else if (strcmp("C2USE", device) == 0) {
+		c2Use = v;	
+	} else if (strcmp("C2STBY", device) == 0) {
+		c2Stb = v;	
+	} else if (strcmp("N1USE", device) == 0) {
+		n1Use = v;	
+	} else if (strcmp("N1STBY", device) == 0) {
+		n1Stb = v;	
+	} else if (strcmp("N2USE", device) == 0) {
+		n2Use = v;	
+	} else if (strcmp("N2STBY", device) == 0) {
+		n2Stb = v;	
+	} else {
+		Serial.println("could not find device!");
+		digitalWrite(LED_BUILTIN, 0);
+	}
+}
+
+void actOnControlMessage(char* msg) {
+	char seps[] = ":";
+	char* token;
+	token = strtok(msg, seps);
+	if (token != NULL) {
+		char device[12];
+		strncpy(device, token, 12);
+		token = strtok(NULL, seps);
+		if (token != NULL) {
+			setControl(device, token);
+		} else {
+			Serial.print("message: '"); Serial.print(msg); Serial.println("' - no value field??");
+		}
+	} else {
+		Serial.print("message: '"); Serial.print(msg); Serial.println("' - no msg??");
+	}
+}
+
+void sendBoxConfig() {
+	sendMessage(BOXID ":" BOX_DEFINITIONS);
+}
+
+void actOnAnyXPMessage() {
+	char msg[48];
+	memset(msg, 0, 48);
+	if (getMessage(msg)) {
+		lcd0.clear();
+		lcd1.clear();
+		if (strcmp(MSG_BOX_FISH, msg) == 0) {
+			sendBoxConfig();
+		} else {
+			actOnControlMessage(msg);
+		}
+	}
+}
+
 void identifyScreens() {
 	lcd0.cursor();
+	lcd1.cursor();
+
 	lcd0.setCursor(0, 0);
 	lcd0.print("TEST COM1");
 	delay(200);
@@ -69,7 +133,6 @@ void identifyScreens() {
 	delay(200);
 	lcd0.print(" OK");
 
-	lcd1.cursor();
 	lcd1.setCursor(0, 0);
 	lcd1.print("TEST NAV1");
 	delay(200);
@@ -77,13 +140,45 @@ void identifyScreens() {
 	lcd1.setCursor(0, 1);
 	lcd1.print("TEST NAV2");
 	lcd1.print(" OK");
-	delay(1000);
+	delay(500);
+
+	lcd0.setCursor(0, 0);
+	lcd0.print("            ");
+	delay(200);
+	lcd0.setCursor(0, 1);
+	lcd0.print("            ");
+	delay(200);
+
+	lcd1.setCursor(0, 0);
+	lcd1.print("            ");
+	delay(200);
+	lcd1.setCursor(0, 1);
+	lcd1.print("            ");
+	delay(500);
+
 	lcd0.noCursor();
 	lcd1.noCursor();
 }
 
+void showNetworkInfo() {
+	lcd1.setCursor(0, 0);
+	lcd1.print("ME ");
+	lcd1.print(IP_ADDRESS_ST);
+
+	lcd1.setCursor(0, 1);
+	lcd1.print("XP ");
+	char *xip;
+	xip = getXpIPAddress();
+	lcd1.print(xip);
+	free(xip);
+}
+
+
 void setup() {
 	Serial.begin(115200);
+
+	setupEthernet();
+	sendMessage(MSG_XP_PLUGIN_FISH);
 
 	// power up lcd
 	pinMode(POS_LCD_0, OUTPUT);
@@ -249,6 +344,18 @@ bool flipFlopPushed() {
 }
 
 void loop() {
+	if (! knowsXPAddr()) {
+		lcd0.setCursor(0, 0);
+		lcd0.print("Cannot find XP");
+		showNetworkInfo();
+		delay(500);
+		lcd0.clear();
+		lcd0.setCursor(0, 0);
+		lcd0.print("Looking for XP");
+		sendMessage(MSG_XP_PLUGIN_FISH);
+		actOnAnyXPMessage();
+		delay(500);
+	} else {
 		printFreqs();
 		drawActive();
 		// change active unit if button pressed
@@ -286,8 +393,7 @@ void loop() {
 		if (flipFlopPushed()) {
 			flipFlop();
 		}
-		if (debugDidSomethingHappen()) {
-			Serial.println(getEncoderValue(0));
-		}
+		actOnAnyXPMessage();
+	}
 }
 
