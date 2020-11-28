@@ -6,7 +6,7 @@
 
 
 #define BOXID "BOXID:Motion Capture-CN001A-00000"
-#define BOX_DEFINITIONS "C1USE-CF,C1STBY-CF,C2USE-CF,C2STBY-CF,N1USE-CF,N1STBY-CF,N2USE-CF,N2STBY-CF"
+#define BOX_DEFINITIONS "C1USE-CI,C1STBY-CI,C2USE-CI,C2STBY-CI,N1USE-CI,N1STBY-CI,N2USE-CI,N2STBY-CI"
 #define MSG_BOX_FISH "Avduino Box Fish"
 #define MSG_XP_PLUGIN_FISH "XP Plugin Fish"
 
@@ -45,39 +45,53 @@
 #define ACTIVE_CHAR 0x7f
 //#define ACTIVE_CHAR 0xff
 
+struct tBoxState {
+	unsigned long c1Use;
+	unsigned long c1Stb;
+	unsigned long c2Use;
+	unsigned long c2Stb;
+	unsigned long n1Use;
+	unsigned long n1Stb;
+	unsigned long n2Use;
+	unsigned long n2Stb;
+	int activeDisplay;
+};
 
+struct tBoxState currentState;
 
-float c1Use = 120.10;
-float c1Stb = 125.10;
-float c2Use = 121.90;
-float c2Stb = 124.55;
-float n1Use = 110.20;
-float n1Stb = 107.10;
-float n2Use = 109.30;
-float n2Stb = 108.20;
-int activeDisplay = 0;
+void initialiseState(void) {
+	currentState.c1Use = 120100;
+	currentState.c1Stb = 125100;
+	currentState.c2Use = 121900;
+	currentState.c2Stb = 124550;
+	currentState.n1Use = 110200;
+	currentState.n1Stb = 107100;
+	currentState.n2Use = 109300;
+	currentState.n2Stb = 108200;
+	currentState.activeDisplay = 0;
+}
 
 LiquidCrystal lcd0(RS_0, RW_0, EN_0, D4_0, D5_0, D6_0, D7_0);
 LiquidCrystal lcd1(RS_1, RW_1, EN_1, D4_1, D5_1, D6_1, D7_1);
 
 void setControl(char* device, char* value) {
-	float v = atof(value);
+	unsigned long v = atol(value);
 	if (strcmp("C1USE", device) == 0) {
-		c1Use = v;	
+		currentState.c1Use = v;	
 	} else if (strcmp("C1STBY", device) == 0) {
-		c1Stb = v;	
+		currentState.c1Stb = v;	
 	} else if (strcmp("C2USE", device) == 0) {
-		c2Use = v;	
+		currentState.c2Use = v;	
 	} else if (strcmp("C2STBY", device) == 0) {
-		c2Stb = v;	
+		currentState.c2Stb = v;	
 	} else if (strcmp("N1USE", device) == 0) {
-		n1Use = v;	
+		currentState.n1Use = v;	
 	} else if (strcmp("N1STBY", device) == 0) {
-		n1Stb = v;	
+		currentState.n1Stb = v;	
 	} else if (strcmp("N2USE", device) == 0) {
-		n2Use = v;	
+		currentState.n2Use = v;	
 	} else if (strcmp("N2STBY", device) == 0) {
-		n2Stb = v;	
+		currentState.n2Stb = v;	
 	} else {
 		Serial.println("could not find device!");
 		digitalWrite(LED_BUILTIN, 0);
@@ -118,6 +132,26 @@ void actOnAnyXPMessage() {
 			actOnControlMessage(msg);
 		}
 	}
+}
+
+void sendAnyChanges(struct tBoxState state) {
+	char msg[48] = "      ";
+	snprintf(msg, sizeof(msg), "C1USE:%ld\n", state.c1Use);
+	sendMessage(msg);
+	snprintf(msg, sizeof(msg), "C1STDBY:%ld\n", state.c1Stb);
+	sendMessage(msg);
+	snprintf(msg, sizeof(msg), "C2USE:%ld\n", state.c2Use);
+	sendMessage(msg);
+	snprintf(msg, sizeof(msg), "C2STDBY:%ld\n", state.c2Stb);
+	sendMessage(msg);
+	snprintf(msg, sizeof(msg), "N1USE:%ld\n", state.n1Use);
+	sendMessage(msg);
+	snprintf(msg, sizeof(msg), "N1STDBY:%ld\n", state.n1Stb);
+	sendMessage(msg);
+	snprintf(msg, sizeof(msg), "N2USE:%ld\n", state.n2Use);
+	sendMessage(msg);
+	snprintf(msg, sizeof(msg), "N2STDBY:%ld\n", state.n2Stb);
+	sendMessage(msg);
 }
 
 void identifyScreens() {
@@ -209,17 +243,29 @@ void setup() {
 	digitalWrite(FF_SWITCH_LO, 0);
 	setupEncoders();
 
-	delay(1000);
+	delay(200);
 	lcd0.clear();
 	lcd1.clear();
+
+	initialiseState();
 }
 
 
-float adjustFreq(float v, float min, float max) {
-	if (v > max)
+unsigned long adjustFreq(unsigned long v, unsigned long min, unsigned long max) {
+	if (v > max) {
+		Serial.print("v="); Serial.print(v);
+		Serial.print("  min="); Serial.print(min);
+		Serial.print("  max="); Serial.print(max);
+		Serial.println("v is > max, set it to min");
 		v = min;
-	else if (v < min) 
+	}
+	else if (v < min)  {
+		Serial.print("v="); Serial.print(v);
+		Serial.print("  min="); Serial.print(min);
+		Serial.print("  max="); Serial.print(max);
+		Serial.println("v is < min, set it to max");
 		v = max;
+	}
 	return v;
 }
 
@@ -232,7 +278,7 @@ void drawActive() {
 	lcd1.print(" ");
 	lcd1.setCursor(15, 1);
 	lcd1.print(" ");
-	switch(activeDisplay) {
+	switch(currentState.activeDisplay) {
 		case 0:
 			lcd0.setCursor(15, 0);
 			lcd0.write(ACTIVE_CHAR);
@@ -254,77 +300,84 @@ void drawActive() {
 }
 
 void flipFlop() {
-	float tmp;
-	switch(activeDisplay) {
+	unsigned long tmp;
+	switch(currentState.activeDisplay) {
 		case 0:
-			tmp = c1Stb;
-			c1Stb = c1Use;
-			c1Use = tmp;
+			tmp = currentState.c1Stb;
+			currentState.c1Stb = currentState.c1Use;
+			currentState.c1Use = tmp;
 			break;
 		case 1:
-			tmp = c2Stb;
-			c2Stb = c2Use;
-			c2Use = tmp;
+			tmp = currentState.c2Stb;
+			currentState.c2Stb = currentState.c2Use;
+			currentState.c2Use = tmp;
 			break;
 		case 2:
-			tmp = n1Stb;
-			n1Stb = n1Use;
-			n1Use = tmp;
+			tmp = currentState.n1Stb;
+			currentState.n1Stb = currentState.n1Use;
+			currentState.n1Use = tmp;
 			break;
 		case 3:
 		default:
-			tmp = n2Stb;
-			n2Stb = n2Use;
-			n2Use = tmp;
+			tmp = currentState.n2Stb;
+			currentState.n2Stb = currentState.n2Use;
+			currentState.n2Use = tmp;
 			break;
 	}
 }
 
 void normaliseFreqs() {
 	// adjust freqs to fit spectrum
-	c1Use = adjustFreq(c1Use, 118.0, 136.975);
-	c1Stb = adjustFreq(c1Stb, 118.0, 136.975);
-	c2Use = adjustFreq(c2Use, 118.0, 136.975);
-	c2Stb = adjustFreq(c2Stb, 118.0, 136.975);
-	n1Use = adjustFreq(n1Use, 108.0, 117.95);
-	n1Stb = adjustFreq(n1Stb, 108.0, 117.95);
-	n2Use = adjustFreq(n2Use, 108.0, 117.95);
-	n2Stb = adjustFreq(n2Stb, 108.0, 117.95);
+	currentState.c1Use = adjustFreq(currentState.c1Use, 118000, 136975);
+	currentState.c1Stb = adjustFreq(currentState.c1Stb, 118000, 136975);
+	currentState.c2Use = adjustFreq(currentState.c2Use, 118000, 136975);
+	currentState.c2Stb = adjustFreq(currentState.c2Stb, 118000, 136975);
+	currentState.n1Use = adjustFreq(currentState.n1Use, 108000, 117950);
+	currentState.n1Stb = adjustFreq(currentState.n1Stb, 108000, 117950);
+	currentState.n2Use = adjustFreq(currentState.n2Use, 108000, 117950);
+	currentState.n2Stb = adjustFreq(currentState.n2Stb, 108000, 117950);
 }
 
 void printFreqs() {
 	char buf[15];
 	// c1 use
 	lcd0.setCursor(0, 0);
-	dtostrf(c1Use, 5, 2, buf);
+	dtostrf(truncf(100 * (double)currentState.c1Use/1000)/100, 5, 2, buf);
 	lcd0.print(buf);
 
 	// c1 stdby
 	lcd0.setCursor(8, 0);
-	dtostrf(c1Stb, 5, 2, buf);
+	dtostrf(truncf(100 * (double)currentState.c1Stb/1000)/100, 5, 2, buf);
 	lcd0.print(buf);
 
 	// c2 use
 	lcd0.setCursor(0, 1);
-	dtostrf(c2Use, 5, 2, buf);
+	dtostrf(truncf(100 * (double)currentState.c2Use/1000)/100, 5, 2, buf);
 	lcd0.print(buf);
 
 	// c2 stdby
 	lcd0.setCursor(8, 1);
-	dtostrf(c2Stb, 5, 2, buf);
+	dtostrf(truncf(100 * (double)currentState.c2Stb/1000)/100, 5, 2, buf);
 	lcd0.print(buf);
 
+	// n1 use
 	lcd1.setCursor(0, 0);
-	dtostrf(n1Use, 5, 2, buf);
+	dtostrf(truncf(100 * (double)currentState.n1Use/1000)/100, 5, 2, buf);
 	lcd1.print(buf);
+
+	// n1 stdby
 	lcd1.setCursor(8, 0);
-	dtostrf(n1Stb, 5, 2, buf);
+	dtostrf(truncf(100 * (double)currentState.n1Stb/1000)/100, 5, 2, buf);
 	lcd1.print(buf);
+
+	// n2 use
 	lcd1.setCursor(0, 1);
-	dtostrf(n2Use, 5, 2, buf);
+	dtostrf(truncf(100 * (double)currentState.n2Use/1000)/100, 5, 2, buf);
 	lcd1.print(buf);
+
+	// n2 stdby
 	lcd1.setCursor(8, 1);
-	dtostrf(n2Stb, 5, 2, buf);
+	dtostrf(truncf(100 * (double)currentState.n2Stb/1000)/100, 5, 2, buf);
 	lcd1.print(buf);
 }
 
@@ -343,6 +396,7 @@ bool flipFlopPushed() {
 	}
 }
 
+bool stateChanged = false;
 void loop() {
 	if (! knowsXPAddr()) {
 		lcd0.setCursor(0, 0);
@@ -356,44 +410,53 @@ void loop() {
 		actOnAnyXPMessage();
 		delay(500);
 	} else {
+		actOnAnyXPMessage();
 		printFreqs();
 		drawActive();
 		// change active unit if button pressed
 		if (checkSwitchPushed()) {
-			activeDisplay = (activeDisplay+1) % 4;
+			currentState.activeDisplay = (currentState.activeDisplay+1) % 4;
+			stateChanged = true;
 		} 
 
 		// get changes to frequency
 		int incKhz = getEncoderDir(0);
 		int incMhz = getEncoderDir(1);
-
-		// make changes to active Unit
-		switch(activeDisplay) {
-			case 0:
-				c1Stb -= ((float)incKhz * 0.05);
-				c1Stb -= incMhz;
-				break;
-			case 1:
-				c2Stb -= (float)(incKhz * 0.05);
-				c2Stb -= incMhz;
-				break;
-			case 2:
-				n1Stb -= (float)(incKhz * 0.05);
-				n1Stb -= incMhz;
-				break;
-			case 3:
-			default:
-				n2Stb -= (float)(incKhz * 0.05);
-				n2Stb -= incMhz;
-				break;
+		if ((incKhz != 0) || (incMhz != 0)) {
+			stateChanged = true;
+			// make changes to active Unit
+			switch(currentState.activeDisplay) {
+				case 0:
+					currentState.c1Stb -= incKhz * 50;
+					currentState.c1Stb -= incMhz * 1000;
+					break;
+				case 1:
+					currentState.c2Stb -= incKhz * 50;
+					currentState.c2Stb -= incMhz * 1000;
+					break;
+				case 2:
+					currentState.n1Stb -= incKhz * 50;
+					currentState.n1Stb -= incMhz * 1000;
+					break;
+				case 3:
+				default:
+					currentState.n2Stb -= incKhz * 50;
+					currentState.n2Stb -= incMhz * 1000;
+					break;
+			}
 		}
 		normaliseFreqs();
 
 		// act on flipflop switch
 		if (flipFlopPushed()) {
 			flipFlop();
+			stateChanged = true;
 		}
-		actOnAnyXPMessage();
+		if (stateChanged) {
+			stateChanged = false;
+			sendAnyChanges(currentState);
+		}
+
 	}
 }
 

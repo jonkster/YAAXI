@@ -12,21 +12,11 @@ then
 	nc -4u -l -w0  8889
 	echo "I now know box details..."
 	echo "sending a control message..."
-	echo -n "C1USE:128.00" | nc -4u -w0 192.168.0.190 8888
+	echo "set COM1 Use freq to 128.10"
+	echo -n "C1USE:128100" | nc -4u -w0 192.168.0.190 8888
 	sleep 0.2
-	echo -n "C1STBY:124.00" | nc -4u -w0 192.168.0.190 8888
-	sleep 0.2
-	echo -n "N1USE:108.00" | nc -4u -w0 192.168.0.190 8888
-	sleep 0.2
-	echo -n "N1STBY:108.05" | nc -4u -w0 192.168.0.190 8888
-	sleep 0.2
-	echo -n "C2USE:128.10" | nc -4u -w0 192.168.0.190 8888
-	sleep 0.2
-	echo -n "C2STBY:124.10" | nc -4u -w0 192.168.0.190 8888
-	sleep 0.2
-	echo -n "N2USE:108.10" | nc -4u -w0 192.168.0.190 8888
-	sleep 0.2
-	echo -n "N2STBY:108.15" | nc -4u -w0 192.168.0.190 8888
+	echo "set COM2 Stdby freq to 124.00"
+	echo -n "C2STBY:124000" | nc -4u -w0 192.168.0.190 8888
 	sleep 0.2
 	sleep 2
 	echo "listening for messages from arduino box"
