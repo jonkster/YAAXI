@@ -45,6 +45,12 @@ bool knowsXPAddr() {
 	return foundXP;
 }
 
+char *getMyIPAddress(void) {
+	char *buf = malloc(25);
+	snprintf(buf, 25, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+	return buf;
+}
+
 char *getXpIPAddress(void) {
 	char *buf = malloc(25);
 	snprintf(buf, 25, "%d.%d.%d.%d", xpip[0], xpip[1], xpip[2], xpip[3]);

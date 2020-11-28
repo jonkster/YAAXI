@@ -28,7 +28,7 @@ ff:ce:f5:a2:a2:28
 /* arduino sends data to this port to X Plane box */
 #define XPLANE_PLUGIN_PORT 8889
 
-#define DEBUG_MODE true
+#define DEBUG_MODE false
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,6 +36,8 @@ extern "C" {
 
 
 	bool getMessage(char* buf);
+
+	char *getMyIPAddress(void);
 
 	char *getXpIPAddress(void);
 

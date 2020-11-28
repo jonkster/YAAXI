@@ -6,7 +6,7 @@
 
 
 #define BOXID "BOXID:Motion Capture-CN001A-00000"
-#define BOX_DEFINITIONS "C1USE-CI,C1STBY-CI,C2USE-CI,C2STBY-CI,N1USE-CI,N1STBY-CI,N2USE-CI,N2STBY-CI"
+#define BOX_DEFINITIONS "C1USE-CI,C1STB-CI,C2USE-CI,C2STB-CI,N1USE-CI,N1STB-CI,N2USE-CI,N2STB-CI"
 #define MSG_BOX_FISH "Avduino Box Fish"
 #define MSG_XP_PLUGIN_FISH "XP Plugin Fish"
 
@@ -58,6 +58,7 @@ struct tBoxState {
 };
 
 struct tBoxState currentState;
+struct tBoxState prevState;
 
 void initialiseState(void) {
 	currentState.c1Use = 120100;
@@ -78,23 +79,22 @@ void setControl(char* device, char* value) {
 	unsigned long v = atol(value);
 	if (strcmp("C1USE", device) == 0) {
 		currentState.c1Use = v;	
-	} else if (strcmp("C1STBY", device) == 0) {
+	} else if (strcmp("C1STB", device) == 0) {
 		currentState.c1Stb = v;	
 	} else if (strcmp("C2USE", device) == 0) {
 		currentState.c2Use = v;	
-	} else if (strcmp("C2STBY", device) == 0) {
+	} else if (strcmp("C2STB", device) == 0) {
 		currentState.c2Stb = v;	
 	} else if (strcmp("N1USE", device) == 0) {
 		currentState.n1Use = v;	
-	} else if (strcmp("N1STBY", device) == 0) {
+	} else if (strcmp("N1STB", device) == 0) {
 		currentState.n1Stb = v;	
 	} else if (strcmp("N2USE", device) == 0) {
 		currentState.n2Use = v;	
-	} else if (strcmp("N2STBY", device) == 0) {
+	} else if (strcmp("N2STB", device) == 0) {
 		currentState.n2Stb = v;	
 	} else {
 		Serial.println("could not find device!");
-		digitalWrite(LED_BUILTIN, 0);
 	}
 }
 
@@ -117,7 +117,12 @@ void actOnControlMessage(char* msg) {
 }
 
 void sendBoxConfig() {
-	sendMessage(BOXID ":" BOX_DEFINITIONS);
+	char *ip;
+	ip = getMyIPAddress();
+	char msg[120];
+	snprintf(msg, sizeof(msg), "%s:%s:%s", BOXID, ip, BOX_DEFINITIONS);
+	sendMessage(msg);
+	free(ip);
 }
 
 void actOnAnyXPMessage() {
@@ -132,26 +137,6 @@ void actOnAnyXPMessage() {
 			actOnControlMessage(msg);
 		}
 	}
-}
-
-void sendAnyChanges(struct tBoxState state) {
-	char msg[48] = "      ";
-	snprintf(msg, sizeof(msg), "C1USE:%ld\n", state.c1Use);
-	sendMessage(msg);
-	snprintf(msg, sizeof(msg), "C1STDBY:%ld\n", state.c1Stb);
-	sendMessage(msg);
-	snprintf(msg, sizeof(msg), "C2USE:%ld\n", state.c2Use);
-	sendMessage(msg);
-	snprintf(msg, sizeof(msg), "C2STDBY:%ld\n", state.c2Stb);
-	sendMessage(msg);
-	snprintf(msg, sizeof(msg), "N1USE:%ld\n", state.n1Use);
-	sendMessage(msg);
-	snprintf(msg, sizeof(msg), "N1STDBY:%ld\n", state.n1Stb);
-	sendMessage(msg);
-	snprintf(msg, sizeof(msg), "N2USE:%ld\n", state.n2Use);
-	sendMessage(msg);
-	snprintf(msg, sizeof(msg), "N2STDBY:%ld\n", state.n2Stb);
-	sendMessage(msg);
 }
 
 void identifyScreens() {
@@ -207,12 +192,22 @@ void showNetworkInfo() {
 	free(xip);
 }
 
+void fishForPlugin() {
+	char *ip;
+	ip = getMyIPAddress();
+	char msg[120];
+	snprintf(msg, sizeof(msg), "%s:%s", MSG_XP_PLUGIN_FISH, ip);
+	sendMessage(msg);
+	free(ip);
+}
+
 
 void setup() {
 	Serial.begin(115200);
 
 	setupEthernet();
-	sendMessage(MSG_XP_PLUGIN_FISH);
+
+	fishForPlugin();
 
 	// power up lcd
 	pinMode(POS_LCD_0, OUTPUT);
@@ -253,17 +248,9 @@ void setup() {
 
 unsigned long adjustFreq(unsigned long v, unsigned long min, unsigned long max) {
 	if (v > max) {
-		Serial.print("v="); Serial.print(v);
-		Serial.print("  min="); Serial.print(min);
-		Serial.print("  max="); Serial.print(max);
-		Serial.println("v is > max, set it to min");
 		v = min;
 	}
 	else if (v < min)  {
-		Serial.print("v="); Serial.print(v);
-		Serial.print("  min="); Serial.print(min);
-		Serial.print("  max="); Serial.print(max);
-		Serial.println("v is < min, set it to max");
 		v = max;
 	}
 	return v;
@@ -396,7 +383,52 @@ bool flipFlopPushed() {
 	}
 }
 
-bool stateChanged = false;
+bool sendAnyChanges(tBoxState state, tBoxState prevState) {
+	char msg[48];
+	bool changes = false;
+	if (state.c1Use != prevState.c1Use) {
+		snprintf(msg, sizeof(msg), "C1USE:%ld\n", state.c1Use);
+		sendMessage(msg);
+		changes = true;
+	}
+	if (state.c1Stb != prevState.c1Stb) {
+		snprintf(msg, sizeof(msg), "C1STB:%ld\n", state.c1Stb);
+		sendMessage(msg);
+		changes = true;
+	}
+	if (state.c2Use != prevState.c2Use) {
+		snprintf(msg, sizeof(msg), "C2USE:%ld\n", state.c2Use);
+		sendMessage(msg);
+		changes = true;
+	}
+	if (state.c2Stb != prevState.c2Stb) {
+		snprintf(msg, sizeof(msg), "C2STB:%ld\n", state.c2Stb);
+		sendMessage(msg);
+		changes = true;
+	}
+	if (state.n1Use != prevState.n1Use) {
+		snprintf(msg, sizeof(msg), "N1USE:%ld\n", state.n1Use);
+		sendMessage(msg);
+		changes = true;
+	}
+	if (state.n1Stb != prevState.n1Stb) {
+		snprintf(msg, sizeof(msg), "N1STB:%ld\n", state.n1Stb);
+		sendMessage(msg);
+		changes = true;
+	}
+	if (state.n2Use != prevState.n2Use) {
+		snprintf(msg, sizeof(msg), "N2USE:%ld\n", state.n2Use);
+		sendMessage(msg);
+		changes = true;
+	}
+	if (state.n2Stb != prevState.n2Stb) {
+		snprintf(msg, sizeof(msg), "N2STB:%ld\n", state.n2Stb);
+		sendMessage(msg);
+		changes = true;
+	}
+	return changes;
+}
+
 void loop() {
 	if (! knowsXPAddr()) {
 		lcd0.setCursor(0, 0);
@@ -406,7 +438,7 @@ void loop() {
 		lcd0.clear();
 		lcd0.setCursor(0, 0);
 		lcd0.print("Looking for XP");
-		sendMessage(MSG_XP_PLUGIN_FISH);
+		fishForPlugin();
 		actOnAnyXPMessage();
 		delay(500);
 	} else {
@@ -416,14 +448,12 @@ void loop() {
 		// change active unit if button pressed
 		if (checkSwitchPushed()) {
 			currentState.activeDisplay = (currentState.activeDisplay+1) % 4;
-			stateChanged = true;
 		} 
 
 		// get changes to frequency
 		int incKhz = getEncoderDir(0);
 		int incMhz = getEncoderDir(1);
 		if ((incKhz != 0) || (incMhz != 0)) {
-			stateChanged = true;
 			// make changes to active Unit
 			switch(currentState.activeDisplay) {
 				case 0:
@@ -450,11 +480,10 @@ void loop() {
 		// act on flipflop switch
 		if (flipFlopPushed()) {
 			flipFlop();
-			stateChanged = true;
 		}
-		if (stateChanged) {
-			stateChanged = false;
-			sendAnyChanges(currentState);
+
+		if (sendAnyChanges(currentState, prevState)) {
+			prevState = currentState;
 		}
 
 	}
