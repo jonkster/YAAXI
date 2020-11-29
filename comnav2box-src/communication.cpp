@@ -1,15 +1,27 @@
 #include "communication.h"
 
-byte mac[] =  { MAC_ADDRESS };
-IPAddress ip( IP_ADDRESS );   // box ip address
-IPAddress xpip( 192, 168, 0, 255 ); // xplane host ip address (initially set to broadcast)
+#define UDP_TX_PACKET_MAX_SIZE 255 //increase UDP size
+#define MSG_XP_PLUGIN_FISH "XP Plugin Fish"
+
+// this is the port the arduino listens on
+#define ARDUINO_BOX_PORT 8888
+
+// arduino sends data to this port to X Plane box
+#define XPLANE_PLUGIN_PORT 8889
+
+IPAddress ip;   // box ip address
+IPAddress xpip; // xplane host ip address (initially set to broadcast)
 char xpData[UDP_TX_PACKET_MAX_SIZE];
 
 /* box listens on this port for stuff from X Plane box */
 unsigned int boxPort = ARDUINO_BOX_PORT;
+
 /* box sends data to this port to X Plane box */
 unsigned int xpPort = XPLANE_PLUGIN_PORT;
 
+
+char* boxId;
+char* boxDefs;
 
 EthernetUDP	Udp;
 
@@ -17,10 +29,18 @@ bool foundXP = false;
 bool verbose = DEBUG_MODE;
 
 
-void setupEthernet() {
-	Ethernet.begin(mac, ip);
+void setupEthernet(byte *mac, IPAddress ipa, IPAddress bCast, const char* bid, const char* bDefs) {
+	Ethernet.begin(mac, ipa);
+	ip = ipa;
+	xpip = bCast;
 	Udp.begin(boxPort);
 	memset(xpData, 0, sizeof(xpData));
+
+	boxId = (char*)malloc(strlen(bid)+1);
+	strcpy(boxId, bid);
+
+	boxDefs = (char*)malloc(strlen(bDefs)+1);
+	strcpy(boxDefs, bDefs);
 }
 
 void sendMessage(const char* msg) {
@@ -45,14 +65,27 @@ bool knowsXPAddr() {
 	return foundXP;
 }
 
+
+void fishForPlugin() {
+	char msg[120];
+	snprintf(msg, sizeof(msg), "%s:%d.%d.%d.%d", MSG_XP_PLUGIN_FISH, ip[0], ip[1], ip[2], ip[3]);
+	sendMessage(msg);
+}
+
+void sendBoxConfig() {
+	char msg[120];
+	snprintf(msg, sizeof(msg), "%s:%d.%d.%d.%d:%s", boxId, ip[0], ip[1], ip[2], ip[3], boxDefs);
+	sendMessage(msg);
+}
+
 char *getMyIPAddress(void) {
-	char *buf = malloc(25);
+	char *buf = (char*)malloc(25);
 	snprintf(buf, 25, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
 	return buf;
 }
 
 char *getXpIPAddress(void) {
-	char *buf = malloc(25);
+	char *buf = (char*)malloc(25);
 	snprintf(buf, 25, "%d.%d.%d.%d", xpip[0], xpip[1], xpip[2], xpip[3]);
 	return buf;
 }
@@ -68,19 +101,13 @@ bool getMessage(char* buf) {
 		strncat(xpData, packetBuffer, packetSize);
 
 		if (xpip[3] == 255) {
+			// We have been sending on the broadcast address, now we have response
 			// get XPlane IP address
 			if (strcmp("Avduino Box Fish", xpData) == 0) {
 				IPAddress remote = Udp.remoteIP();
 				xpip[3] = remote[3];
 				if (verbose) {
-					Serial.print("found XPlane @192.168.0."); Serial.println(xpip[3]);
-				}
-				foundXP = true;
-			} else if (strncmp("LED", xpData, 3) == 0) {
-				IPAddress remote = Udp.remoteIP();
-				xpip[3] = remote[3];
-				if (verbose) {
-					Serial.print("found XPlane @192.168.0."); Serial.println(xpip[3]);
+					Serial.print("found XPlane @"); Serial.print(getXpIPAddress()); Serial.println(xpip[3]);
 				}
 				foundXP = true;
 			}
