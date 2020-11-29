@@ -4,7 +4,6 @@
 #include "communication.h"
 #include "box.h"
 
-
 void actOnXPControlMessage(char* msg) {
 	char seps[] = ":";
 	char* token;
@@ -43,6 +42,7 @@ bool actOnAnyXPMessage() {
 }
 
 void setup() {
+	Serial.begin(115200);
 	byte mac[] = { MAC_ADDRESS };
 	IPAddress ip( IP_ADDRESS );
 	IPAddress broadcastAddress( NETWORK_BROADCAST_ADDRESS ); 
@@ -56,14 +56,14 @@ void loop() {
 	if (! knowsXPAddr()) {
 		noConnectionActions();
 		if (actOnAnyXPMessage()) {
-			initialiseBox();
+			setStartState();
 		}
 		delay(500);
 	} else {
 		actOnAnyXPMessage();
-		updateState();
-		if (sendAnyChanges(currentState, prevState)) {
-			prevState = currentState;
+		boxMainLoop();
+		if (sendAnyChanges()) {
+			clearChanges();
 		}
 
 	}

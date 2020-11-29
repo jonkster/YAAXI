@@ -4,13 +4,62 @@
 #include "communication.h"
 #include "box.h"
 
+// PIN ASSIGNMENTS
+#define FF_SWITCH_PUSH 24
+#define FF_SWITCH_LO   25
+
+#define POS_BL 2
+#define CONTRAST_0 3
+#define CONTRAST_1 4
+
+#define POS_LCD_0 39
+#define RS_0  41
+#define RW_0  42
+#define EN_0  43
+#define D4_0  44
+#define D5_0  45
+#define D6_0  46
+#define D7_0  47
+
+#define POS_LCD_1 29
+#define RS_1  31
+#define RW_1  32
+#define EN_1  33
+#define D4_1  34
+#define D5_1  35
+#define D6_1  36
+#define D7_1  37
+
+// display contrast/brightness
+#define CONTRASTV_0 30
+#define CONTRASTV_1 80
+#define BL 180
+
+#define ACTIVE_CHAR 0x7f
+//#define ACTIVE_CHAR 0xff
+
+
+
 LiquidCrystal lcd0(RS_0, RW_0, EN_0, D4_0, D5_0, D6_0, D7_0);
 LiquidCrystal lcd1(RS_1, RW_1, EN_1, D4_1, D5_1, D6_1, D7_1);
 
+struct tBoxState {
+	unsigned long c1Use;
+	unsigned long c1Stb;
+	unsigned long c2Use;
+	unsigned long c2Stb;
+	unsigned long n1Use;
+	unsigned long n1Stb;
+	unsigned long n2Use;
+	unsigned long n2Stb;
+	int activeDisplay;
+};
 struct tBoxState currentState;
 struct tBoxState prevState;
 
-void identifyScreens(void);
+
+void testScreens(void);
+void showNetworkInfo(void);
 
 unsigned long adjustFreq(unsigned long v, unsigned long min, unsigned long max) {
 	if (v > max) {
@@ -22,7 +71,7 @@ unsigned long adjustFreq(unsigned long v, unsigned long min, unsigned long max) 
 	return v;
 }
 
-void drawActive() {
+void markActiveRadio() {
 	lcd0.setCursor(15, 0);
 	lcd0.print(" ");
 	lcd0.setCursor(15, 1);
@@ -52,7 +101,7 @@ void drawActive() {
 	}
 }
 
-void flipFlop() {
+void flipFrequencies() {
 	unsigned long tmp;
 	switch(currentState.activeDisplay) {
 		case 0:
@@ -95,20 +144,8 @@ bool flipFlopPushed() {
 	}
 }
 
-void initialiseState(void) {
-	currentState.c1Use = 120100;
-	currentState.c1Stb = 125100;
-	currentState.c2Use = 121900;
-	currentState.c2Stb = 124550;
-	currentState.n1Use = 110200;
-	currentState.n1Stb = 107100;
-	currentState.n2Use = 109300;
-	currentState.n2Stb = 108200;
-	currentState.activeDisplay = 0;
-}
-
-void initialiseBox(void) {
-	initialiseState();
+void setStartState(void) {
+	// display starting message
 	lcd0.clear();
 	lcd1.clear();
 
@@ -121,12 +158,25 @@ void initialiseBox(void) {
 	lcd1.setCursor(0, 0);
 	lcd1.print("Starting Radio");
 	delay(2000);
+
+	// clear screen
 	lcd0.clear();
 	lcd1.clear();
+	
+	// set starting frequencies
+	currentState.c1Use = 120100;
+	currentState.c1Stb = 125100;
+	currentState.c2Use = 121900;
+	currentState.c2Stb = 124550;
+	currentState.n1Use = 110200;
+	currentState.n1Stb = 107100;
+	currentState.n2Use = 109300;
+	currentState.n2Stb = 108200;
+	currentState.activeDisplay = 0;
+
 }
 
 void boxSetup() {
-	Serial.begin(115200);
 
 	// power up lcd
 	pinMode(POS_LCD_0, OUTPUT);
@@ -149,9 +199,9 @@ void boxSetup() {
 	lcd0.begin(16, 2);
 	lcd1.begin(16, 2);
 	delay(200);
+	testScreens();
 
-	identifyScreens();
-
+	// set up switch and encoders
 	pinMode(FF_SWITCH_PUSH, INPUT_PULLUP);
 	pinMode(FF_SWITCH_LO, OUTPUT);
 	digitalWrite(FF_SWITCH_LO, 0);
@@ -163,7 +213,7 @@ void boxSetup() {
 
 }
 
-void identifyScreens() {
+void testScreens() {
 	lcd0.cursor();
 	lcd1.cursor();
 
@@ -215,15 +265,17 @@ void normaliseFreqs() {
 	currentState.n2Stb = adjustFreq(currentState.n2Stb, 108000, 117950);
 }
 
+
 void noConnectionActions(void) {
-		lcd0.setCursor(0, 0);
-		lcd0.print("Cannot find XP");
-		showNetworkInfo();
-		delay(500);
-		lcd0.clear();
-		lcd0.setCursor(0, 0);
-		lcd0.print("Looking for XP");
-		fishForPlugin();
+	// display diagnostics while waiting for connection
+	lcd0.setCursor(0, 0);
+	lcd0.print("Cannot find XP");
+	showNetworkInfo();
+	delay(500);
+	lcd0.clear();
+	lcd0.setCursor(0, 0);
+	lcd0.print("Looking for XP");
+	fishForPlugin();
 }
 
 void printFreqs() {
@@ -269,7 +321,7 @@ void printFreqs() {
 	lcd1.print(buf);
 }
 
-void showNetworkInfo() {
+void showNetworkInfo(void) {
 	lcd1.setCursor(0, 0);
 	lcd1.print("ME ");
 	char *ip = getMyIPAddress();
@@ -284,77 +336,86 @@ void showNetworkInfo() {
 }
 
 void setControl(char* device, char* value) {
+	// act on message from XPlane by setting our systems state
 	unsigned long v = atol(value);
 	if (strcmp("C1USE", device) == 0) {
 		currentState.c1Use = v;	
-	} else if (strcmp("C1STB", device) == 0) {
+	} else if (strcmp("C1S", device) == 0) {
 		currentState.c1Stb = v;	
-	} else if (strcmp("C2USE", device) == 0) {
+	} else if (strcmp("C2U", device) == 0) {
 		currentState.c2Use = v;	
-	} else if (strcmp("C2STB", device) == 0) {
+	} else if (strcmp("C2S", device) == 0) {
 		currentState.c2Stb = v;	
-	} else if (strcmp("N1USE", device) == 0) {
+	} else if (strcmp("N1U", device) == 0) {
 		currentState.n1Use = v;	
-	} else if (strcmp("N1STB", device) == 0) {
+	} else if (strcmp("N1S", device) == 0) {
 		currentState.n1Stb = v;	
-	} else if (strcmp("N2USE", device) == 0) {
+	} else if (strcmp("N2U", device) == 0) {
 		currentState.n2Use = v;	
-	} else if (strcmp("N2STB", device) == 0) {
+	} else if (strcmp("N2S", device) == 0) {
 		currentState.n2Stb = v;	
 	} else {
-		Serial.println("could not find device!");
+		if (DEBUG) {
+			Serial.println("could not find device!");
+		}
 	}
 }
 
-bool sendAnyChanges(tBoxState state, tBoxState prevState) {
+
+bool sendAnyChanges() {
+	// send any changes we know about to XPlane
 	char msg[48];
 	bool changes = false;
-	if (state.c1Use != prevState.c1Use) {
-		snprintf(msg, sizeof(msg), "C1USE:%ld\n", state.c1Use);
+	if (currentState.c1Use != prevState.c1Use) {
+		snprintf(msg, sizeof(msg), "C1U:%ld\n", currentState.c1Use);
 		sendMessage(msg);
 		changes = true;
 	}
-	if (state.c1Stb != prevState.c1Stb) {
-		snprintf(msg, sizeof(msg), "C1STB:%ld\n", state.c1Stb);
+	if (currentState.c1Stb != prevState.c1Stb) {
+		snprintf(msg, sizeof(msg), "C1S:%ld\n", currentState.c1Stb);
 		sendMessage(msg);
 		changes = true;
 	}
-	if (state.c2Use != prevState.c2Use) {
-		snprintf(msg, sizeof(msg), "C2USE:%ld\n", state.c2Use);
+	if (currentState.c2Use != prevState.c2Use) {
+		snprintf(msg, sizeof(msg), "C2U:%ld\n", currentState.c2Use);
 		sendMessage(msg);
 		changes = true;
 	}
-	if (state.c2Stb != prevState.c2Stb) {
-		snprintf(msg, sizeof(msg), "C2STB:%ld\n", state.c2Stb);
+	if (currentState.c2Stb != prevState.c2Stb) {
+		snprintf(msg, sizeof(msg), "C2S:%ld\n", currentState.c2Stb);
 		sendMessage(msg);
 		changes = true;
 	}
-	if (state.n1Use != prevState.n1Use) {
-		snprintf(msg, sizeof(msg), "N1USE:%ld\n", state.n1Use);
+	if (currentState.n1Use != prevState.n1Use) {
+		snprintf(msg, sizeof(msg), "N1U:%ld\n", currentState.n1Use);
 		sendMessage(msg);
 		changes = true;
 	}
-	if (state.n1Stb != prevState.n1Stb) {
-		snprintf(msg, sizeof(msg), "N1STB:%ld\n", state.n1Stb);
+	if (currentState.n1Stb != prevState.n1Stb) {
+		snprintf(msg, sizeof(msg), "N1S:%ld\n", currentState.n1Stb);
 		sendMessage(msg);
 		changes = true;
 	}
-	if (state.n2Use != prevState.n2Use) {
-		snprintf(msg, sizeof(msg), "N2USE:%ld\n", state.n2Use);
+	if (currentState.n2Use != prevState.n2Use) {
+		snprintf(msg, sizeof(msg), "N2U:%ld\n", currentState.n2Use);
 		sendMessage(msg);
 		changes = true;
 	}
-	if (state.n2Stb != prevState.n2Stb) {
-		snprintf(msg, sizeof(msg), "N2STB:%ld\n", state.n2Stb);
+	if (currentState.n2Stb != prevState.n2Stb) {
+		snprintf(msg, sizeof(msg), "N2S:%ld\n", currentState.n2Stb);
 		sendMessage(msg);
 		changes = true;
 	}
 	return changes;
 }
 
-void updateState(void) {
+void clearChanges(void) {
+	prevState = currentState;
+}
+
+void boxMainLoop(void) {
 		printFreqs();
-		drawActive();
+		markActiveRadio();
 		// change active unit if button pressed
 		if (checkSwitchPushed()) {
 			currentState.activeDisplay = (currentState.activeDisplay+1) % 4;
@@ -387,8 +448,7 @@ void updateState(void) {
 		}
 		normaliseFreqs();
 
-		// act on flipflop switch
 		if (flipFlopPushed()) {
-			flipFlop();
+			flipFrequencies();
 		}
 }

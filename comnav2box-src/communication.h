@@ -5,6 +5,8 @@
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 
+#define MSG_BOX_FISH "Avduino Box Fish"
+
 #define DEBUG_MODE false
 
 #ifdef __cplusplus

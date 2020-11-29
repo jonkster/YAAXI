@@ -74,7 +74,7 @@ void fishForPlugin() {
 
 void sendBoxConfig() {
 	char msg[120];
-	snprintf(msg, sizeof(msg), "%s:%d.%d.%d.%d:%s", boxId, ip[0], ip[1], ip[2], ip[3], boxDefs);
+	snprintf(msg, sizeof(msg), "BOXID:%s:%d.%d.%d.%d:%s", boxId, ip[0], ip[1], ip[2], ip[3], boxDefs);
 	sendMessage(msg);
 }
 
