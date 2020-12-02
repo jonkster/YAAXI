@@ -43,6 +43,12 @@ void setupEthernet(byte *mac, IPAddress ipa, IPAddress bCast, const char* bid, c
 	strcpy(boxDefs, bDefs);
 }
 
+void sendDataTypeLong(const char* code, long data ) {
+	char msg[48];
+	snprintf(msg, sizeof(msg), "%s:%ld\n", code, data);
+	sendMessage(msg);
+}
+
 void sendMessage(const char* msg) {
 	if (verbose) {
 		Serial.print("Sending msg: ");

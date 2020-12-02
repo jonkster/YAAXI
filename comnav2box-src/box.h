@@ -95,6 +95,6 @@ void setStartState(void);
 void noConnectionActions(void);
 bool sendAnyChanges(void);
 void setControl(char* device, char* value);
-void updateState(void);
+void boxMainLoop(void);
 
 #endif

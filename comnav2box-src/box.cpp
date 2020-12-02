@@ -355,7 +355,7 @@ void setControl(char* device, char* value) {
 	} else if (strcmp("N2S", device) == 0) {
 		currentState.n2Stb = v;	
 	} else {
-		if (DEBUG) {
+		if (DEBUG_MODE) {
 			Serial.println("could not find device!");
 		}
 	}
@@ -364,46 +364,37 @@ void setControl(char* device, char* value) {
 
 bool sendAnyChanges() {
 	// send any changes we know about to XPlane
-	char msg[48];
 	bool changes = false;
 	if (currentState.c1Use != prevState.c1Use) {
-		snprintf(msg, sizeof(msg), "C1U:%ld\n", currentState.c1Use);
-		sendMessage(msg);
+		sendDataTypeLong("C1U", currentState.c1Use);   
 		changes = true;
 	}
 	if (currentState.c1Stb != prevState.c1Stb) {
-		snprintf(msg, sizeof(msg), "C1S:%ld\n", currentState.c1Stb);
-		sendMessage(msg);
+		sendDataTypeLong("C1S", currentState.c1Use);   
 		changes = true;
 	}
 	if (currentState.c2Use != prevState.c2Use) {
-		snprintf(msg, sizeof(msg), "C2U:%ld\n", currentState.c2Use);
-		sendMessage(msg);
+		sendDataTypeLong("C2U", currentState.c1Use);   
 		changes = true;
 	}
 	if (currentState.c2Stb != prevState.c2Stb) {
-		snprintf(msg, sizeof(msg), "C2S:%ld\n", currentState.c2Stb);
-		sendMessage(msg);
+		sendDataTypeLong("C2S", currentState.c1Use);   
 		changes = true;
 	}
 	if (currentState.n1Use != prevState.n1Use) {
-		snprintf(msg, sizeof(msg), "N1U:%ld\n", currentState.n1Use);
-		sendMessage(msg);
+		sendDataTypeLong("N1U", currentState.c1Use);   
 		changes = true;
 	}
 	if (currentState.n1Stb != prevState.n1Stb) {
-		snprintf(msg, sizeof(msg), "N1S:%ld\n", currentState.n1Stb);
-		sendMessage(msg);
+		sendDataTypeLong("N1S", currentState.c1Use);   
 		changes = true;
 	}
 	if (currentState.n2Use != prevState.n2Use) {
-		snprintf(msg, sizeof(msg), "N2U:%ld\n", currentState.n2Use);
-		sendMessage(msg);
+		sendDataTypeLong("N2U", currentState.c1Use);   
 		changes = true;
 	}
 	if (currentState.n2Stb != prevState.n2Stb) {
-		snprintf(msg, sizeof(msg), "N2S:%ld\n", currentState.n2Stb);
-		sendMessage(msg);
+		sendDataTypeLong("N2S", currentState.c1Use);   
 		changes = true;
 	}
 	return changes;

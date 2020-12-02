@@ -7,7 +7,7 @@
 
 #define MSG_BOX_FISH "Avduino Box Fish"
 
-#define DEBUG_MODE false
+#define DEBUG_MODE true
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,6 +24,8 @@ extern "C" {
 	bool knowsXPAddr(void);
 
 	void sendBoxConfig(void);
+
+	void sendDataTypeLong(const char* code, long data);
 
 	void sendMessage(const char* msg);
 
