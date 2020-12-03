@@ -9,51 +9,124 @@ Each box should have a unique ID
 Box v0-9aef456")
 
 Each of the controls/displays should have a unique string name (eg TOGGLE0,
-LED0 etc)
+LED0, SWITCH2 etc)
 
-Prototype Box Operation
-=======================
+How the System works
+====================
 
-The protoptype box initially used to develop the system consists of a number of
-devices connected to an Arduino Mega with an etherney shield.
+The arduino box starts calling on the network broadcast address trying to find
+the XPlane plugin that is listening for arduino devices.
 
-The prototype example box consists of:
+When the plugin finds a new arduino device, it sends a response to the arduino
+device and now both XPlane and the ardiuno know each other's address.
 
-Controls:
----------
-- 2 toggle switches,
-- 2 momentary on switches,
-- 2 rotary encoders that also have momentary on switches and
-- a 3 position rotary switch that acts like 2 toggle switches but only 1 can be
-  on at a time)
+The XPlane plugin sends messages to the arduino device something like:
 
-Displays:
---------
-- 6 leds (3 red and 3 green)
+LED2:1
+LCDLINE1:Hello!
 
-The box has 2 modes: normal and diagnostic. It should boot up in normal mode.
+The box interprets this and can act on it.
 
-In normal mode, the box will flash all red leds regularly until it can connect
-to an XP plugin.  After that it will send any detected control changes
-(ie changes of switch/knob positions) to the plugin and act on device messages
-from the plugin by setting leds.
+The box can send the XPlane plugin messages like:
 
-In diagnostic mode, changing switches on the box should generate different led light
-displays - this used to test all switches work
+SWITCH0:1
+ENCODER1:234
 
-to change modes:
-----------------
 
-- hold both rotary encoder push buttons down simultaneously to put box in diagnostic mode
+Making a new Arduino box
+========================
 
-- hold both red push buttons down simultaneously to return box to normal mode
+1. copy the generic files to a new directory:
+	main.cpp
+	box.h
+	Makefile
+	simulatePlugin.sh*
+	box.sh*
+
+
+2. in box.h specify an appropriate values for the following pre processor defines:
+
+	BOXID
+	BOX_DEFINITIONS
+	IP_ADDRESS
+	MAC_ADDRESS
+	NETWORK_BROADCAST_ADDRESS
+
+	eg
+
+	#define BOXID "Motion Capture-CN001A-00000"
+	#define BOX_DEFINITIONS "C1U-CI,C1S-CI,C2U-CI,C2S-CI,N1U-CI,N1S-CI,N2U-CI,N2S-CI"
+	#define IP_ADDRESS 192, 168, 0, 190
+	#define MAC_ADDRESS 0xC0, 0x90, 0x33, 0x53, 0xB8, 0xDF
+	#define NETWORK_BROADCAST_ADDRESS 192, 168, 0, 255
+
+	NB the BOX_DEFINITIONS setting is not currently used but is meant to allow
+	XPlane to potentially present a GUI style configuration option rather
+	than needing the user to edit the initialisation file by hand, so try
+	and make it useful so it can be used in future.
+
+	The IP addresses must be hard coded at the moment, your arduino will
+	need a unique IP address on your network.
+
+3. create a file:
+	box.cpp
+
+	In box.cpp, you set up any device specific code.  You must define the
+	following functions that are declared in the box.h file above:
+
+	void boxSetup(void);
+	void clearChanges(void);
+	void setStartState(void);
+	void noConnectionActions(void);
+	bool sendAnyChanges(void);
+	void setControl(char* device, char* value);
+	void boxMainLoop(void);
+
+	What the required methods above should implement:
+*void boxSetup(void)*
+		where you set up arduino pins, initialise displays, hardware etc
+ 
+*void clearChanges(void)*
+		called after "sendAnyChanges" - use it if you need to remove
+		any flags that you use to say changes need to be sent to XPlane
+
+*void setStartState(void)*
+		use if you want to set anything up once communication between
+		the box and XPlane is made.  (eg you may display some
+		diagnostic, welcome screens prior to contact with XPlane.  This
+		method is called  once XPlane has been found and communication
+		established - you may want to first remove diagnostic messages,
+		flashing lights etc and get ready for use).
+
+*void noConnectionActions(void)*
+	any actions you want to take if the device hasn't (yet) found XPlane
+	(eg show diagnostic messages, flash warning lights etc)
+
+*bool sendAnyChanges(void)*
+	where you check if anything has changed on the device (eg a switch was
+	pushed) and if so, send an appropriate message(s) to XPlane,
+
+*void setControl(char* device, char* value)*
+	 set something on the arduino in response to a message from XPlane, (eg
+	turn on a LED, display a value, run a motor etc)
+
+*void boxMainLoop(void)*
+	called repeatedly, this is where you can adjust displays, check
+	switches, get encoder values etc.
+
+
+4. Using the existing script box.sh as a guide, add any test messages that can
+be used to establish the system is working without having to fire up XPlane
+repeatedly.
 
 
 
 Communication Protocol
 ======================
 
-box IP currently hard coded to be 192.168.0.178
+box IP currently hard coded (eg 192.168.0.190).  This may be refactored at some
+point to allow the arduino to be assigned an address but currently you will
+need to hard code a unique address to each arduino device you use.
 
 messages from box to XP
 -----------------------
