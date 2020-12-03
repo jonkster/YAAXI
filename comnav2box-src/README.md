@@ -8,8 +8,9 @@ Each box should have a unique ID
 (suggested format "MANUFACTURER_ID-BOX_TYPE-XXXXX" eg "Motion Capture-Switch
 Box v0-9aef456")
 
-Each of the controls/displays should have a unique string name (eg TOGGLE0,
-LED0, SWITCH2 etc)
+Each of the controls/displays you want to control from the Arduino should be
+given a unique string name (eg TOGGLE0, LED0, SWITCH2 etc) that you will use to
+communicate between XPlane and the arduino box.
 
 How the System works
 ====================
@@ -21,44 +22,53 @@ When the plugin finds a new arduino device, it sends a response to the arduino
 device and now both XPlane and the ardiuno know each other's address.
 
 The XPlane plugin sends messages to the arduino device something like:
-
+```
 LED2:1
 LCDLINE1:Hello!
+```
 
 The box interprets this and can act on it.
 
 The box can send the XPlane plugin messages like:
 
+```
 SWITCH0:1
 ENCODER1:234
+```
 
 
 Making a new Arduino box
 ========================
 
 1. copy the generic files to a new directory:
+```
 	main.cpp
 	box.h
 	Makefile
-	simulatePlugin.sh*
-	box.sh*
+	simulatePlugin.sh
+	box.sh
+```
 
 
 2. in box.h specify an appropriate values for the following pre processor defines:
 
+```
 	BOXID
 	BOX_DEFINITIONS
 	IP_ADDRESS
 	MAC_ADDRESS
 	NETWORK_BROADCAST_ADDRESS
+```
 
 	eg
 
+```
 	#define BOXID "Motion Capture-CN001A-00000"
 	#define BOX_DEFINITIONS "C1U-CI,C1S-CI,C2U-CI,C2S-CI,N1U-CI,N1S-CI,N2U-CI,N2S-CI"
 	#define IP_ADDRESS 192, 168, 0, 190
 	#define MAC_ADDRESS 0xC0, 0x90, 0x33, 0x53, 0xB8, 0xDF
 	#define NETWORK_BROADCAST_ADDRESS 192, 168, 0, 255
+```
 
 	NB the BOX_DEFINITIONS setting is not currently used but is meant to allow
 	XPlane to potentially present a GUI style configuration option rather
@@ -69,11 +79,14 @@ Making a new Arduino box
 	need a unique IP address on your network.
 
 3. create a file:
+```
 	box.cpp
+```
 
 	In box.cpp, you set up any device specific code.  You must define the
 	following functions that are declared in the box.h file above:
 
+```
 	void boxSetup(void);
 	void clearChanges(void);
 	void setStartState(void);
@@ -81,8 +94,9 @@ Making a new Arduino box
 	bool sendAnyChanges(void);
 	void setControl(char* device, char* value);
 	void boxMainLoop(void);
+```
 
-	What the required methods above should implement:
+### What the required methods above should implement:
 *void boxSetup(void)*
 		where you set up arduino pins, initialise displays, hardware etc
  
@@ -139,6 +153,7 @@ on the broadcast address using port 8889.
 If it gets a response "Avduino Box Fish" on port 8888 it will set the IP
 address of the responder as the XPlane address.
 
+```
 	format: "XP Plugin Fish"
 		try and get a response from the plugin
 		(expecting an "Avduino Box Fish" message in return)
@@ -162,12 +177,14 @@ address of the responder as the XPlane address.
 		      Y = value 
 		eg "TWIST1:270" or "SWITCH2:1"
 
+```
 
 messages to box from XP:
 ------------------------
 
 The box reads UDP messages sent to it on port 8888
 
+```
 format: "XP Avduino Fish" 
 	
 	treat IP address this message comes from as the IP address of the XP
@@ -184,6 +201,7 @@ format: "NAME:Y"
 all other messages:
 	return unique box identifier
 
+```
 
 see simulatePlugin.sh for examples of communication protocol
 
