@@ -31,67 +31,67 @@ else
 		echo ${RESPONSE}
 		case ${RESPONSE} in
 			"MHZ_KNOB_COM1:1")
-				COM1=$((${COM1} + 100))
+				COM1=$((${COM1} - 100))
 				echo -n "C1S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"MHZ_KNOB_COM1:-1")
-				COM1=$((${COM1} - 100))
+				COM1=$((${COM1} + 100))
 				echo -n "C1S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"KHZ_KNOB_COM1:1")
-				COM1=$((${COM1} + 5))
+				COM1=$((${COM1} - 5))
 				echo -n "C1S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"KHZ_KNOB_COM1:-1")
-				COM1=$((${COM1} - 5))
+				COM1=$((${COM1} + 5))
 				echo -n "C1S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"MHZ_KNOB_COM1:2")
-				COM1=$((${COM1} + 100))
+				COM1=$((${COM1} - 100))
 				echo -n "C2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"MHZ_KNOB_COM2:-1")
-				COM1=$((${COM1} - 100))
+				COM1=$((${COM1} + 100))
 				echo -n "C2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"KHZ_KNOB_COM2:1")
-				COM1=$((${COM1} + 5))
+				COM1=$((${COM1} - 5))
 				echo -n "C2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"KHZ_KNOB_COM2:-1")
-				COM1=$((${COM1} - 5))
+				COM1=$((${COM1} + 5))
 				echo -n "C2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"MHZ_KNOB_NAV1:1")
-				COM1=$((${COM1} + 100))
+				COM1=$((${COM1} - 100))
 				echo -n "N1S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"MHZ_KNOB_NAV1:-1")
-				COM1=$((${COM1} - 100))
+				COM1=$((${COM1} + 100))
 				echo -n "N1S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"KHZ_KNOB_NAV1:1")
-				COM1=$((${COM1} + 5))
+				COM1=$((${COM1} - 5))
 				echo -n "N1S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"KHZ_KNOB_NAV1:-1")
-				COM1=$((${COM1} - 5))
+				COM1=$((${COM1} + 5))
 				echo -n "N1S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"MHZ_KNOB_NAV1:2")
-				COM1=$((${COM1} + 100))
+				COM1=$((${COM1} - 100))
 				echo -n "N2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"MHZ_KNOB_NAV1")
-				COM1=$((${COM1} - 100))
+				COM1=$((${COM1} + 100))
+				echo -n "N2S:${COM1}" | nc -4u -w0 $1 8888
+				;;
+			"KHZ_KNOB_NAV1")
+				COM1=$((${COM1} - 5))
 				echo -n "N2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 			"KHZ_KNOB_NAV1")
 				COM1=$((${COM1} + 5))
-				echo -n "N2S:${COM1}" | nc -4u -w0 $1 8888
-				;;
-			"KHZ_KNOB_NAV1")
-				COM1=$((${COM1} - 5))
 				echo -n "N2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
 		esac

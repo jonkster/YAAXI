@@ -34,101 +34,192 @@ replace them as they may be more refined and better suited to most users.  This
 one is meant to be quick and dirty and flexible and allows (hopefully) a lot of
 flexibility.
 
+## Current Status
+
+The code is rapidly changing, beware if you start using this at the moment,
+particularly configuration syntax!  Hopefully the structure will bed down soon.
+
+NB it is all very RAW.
+
+YAAXI is being developed on a Linux system.  The plugin only tested on Linux,
+it should be able to be ported to Windows systems (and Mac) but I do not have
+the environment to try this out.
+
+The Arduino stuff does not use the Arduino IDE, instead you edit the source
+code using whatever editor you prefer and compile and load the code using
+Makefiles run from the command line. (It should be able to be set up to use the
+IDE but I find it faster and more convenient to run it all from the command
+line)
+
 ## In a Nutshell
 
-It is built around a simple message protocol.  It communicates using UDP over
-ethernet.  The Arduino devices do not know anything about X-Plane, a
-configuration file in X-Plane worries about that.
+YAAXI is based on a simple message protocol.  Communication between the
+Arduino(s) and X-Plane is via UDP over ethernet.  **The Arduino devices do not
+know anything about X-Plane**, a configuration file in X-Plane worries about
+that.
 
-(As an example, the Arduino just knows it has a Switch called SWITCH0, a LED
-called LED0 etc and the conguration file in X-Plane maps LED0 to the gear
-unsafe light and SWITCH0 to the gear selector).
+As an example, the Arduino might know it has a Switch called SWITCH0 and a LED
+called LED0 (you write the code to set this up).  The Arduino doesn't know what
+they correspond to in X-Plane.  It doesn't know or care about X-Plane data-refs
+or commands.  It can only send the X-Plane plugin info like SWITCH0 is now "on"
+and it can respond to messages from X-Plane that ask it to turn LED0 "off".
+
+The configuration file in X-Plane might be set up to map LED0 to the gear
+unsafe light and SWITCH0 to the gear selector.
+
+The reason for this is **changes to configuration/behaviour should not involve
+re-programming the Arduino**, instead changes can be made with a simple text
+change in a configuration file located on the X-Plane box.  Potentially this
+configuration could even be done via a GUI interface in a similar style to the
+way Joysticks/Throttle quadrants etc are configured in X-Plane.
 
 
-The Configuration File on X-Plane
-=================================
+### The YAAXI system consists of 3 components:
 
+One (or more) *ArduinoBoxes* - an arduino connected to sensors (eg switches)
+and displays or actuators (eg leds, motors) running a program that communicates
+with the X-Plane Arduino Broker Plugin.
 
-An example of configuration values for a Garmin GNS430 is shown below.
+An *ArduinoBroker* - an X-Plane plugin that communicates with *ArduinoBoxes*.
 
-The Arduino has a number of switches named like:
+*INI File(s)* - placed on the X Plane system, these are used by the broker to
+specify how X Plane should interpret and act on messages from the box devices
+and what data X-Plane should send to the device(s).
+
+ 
+### Philosophy
+
+The Arduino box (or boxes - you can have multiple Arduinos) will have
+sensors or display devices or actuators connected to it, like switches, LEDs,
+rotary encoders, LCD display, OLED displays, stepper motors etc.
+
+Devices connected to the Arduino are classified as either:
+
+ - CONTROLS - inputs (eg switches etc) that are designed to send data to X Plane.
+
+ - DISPLAYS - outputs (eg LEDs, LCD displays, stepper motors etc) that are designed to
+   display or react to information sent from X Plane.
+
+(NB actuators like relays, stepper motors etc are classified in the YAAXI
+system as displays)
+
+A single Arduino box can have a mixture of input and output (CONTROL/DISPLAY)
+devices connected to it.
+
+X Plane requires the YAAXI plug-in that interacts with one (or more) YAAXI
+Arduino "Boxes".
+
+Configuring what X Plane should do with control data sent to it and also what
+data it needs to send to the Arduino, is done with a configuration file (or
+files) located with the X Plane Plugin.
+
+The configuration file is simple text and should be reasonably simple to set
+up, it will list each device on a box with instructions about:
+
+  - what X Plane Commands correspond to messages from box CONTROLS (eg "pitot heat switch was turned on")
+
+  - what X-Plane data ref data should be sent to the box as DISPLAYS (eg "the undercarriage warning light should be on")
+
+The Plugin Configuration File on X-Plane
+=========================================
+
+An example of how configuration values might be set using a simple for a
+COM/NAV radio is shown below.
+
+Assume the Arduino box has been programmed to respond to commands that refer to the following displays:
+
 ```
-AP_ON
-FD_ON
-etc
+CU (the COM "In Use" frequency display)
+CS (the COM "Standby" frequency display)
+NU (the NAV "In Use" frequency display)
+NS (the NAV "Standby" frequency display)
 ```
 
-and will send information about these switches to X-Plane whenever they change.
-X-Plane will react to these messages.
-
-The configuration file maps these to X-Plane commands
-
+So if the Arduino receives a message from X-Plane like:
 ```
-################# AUTOPILOT BOX
-A:BOX3:192.168.0.182:
-# Initial values to box
-I:AP_ON:0:BOX3
-I:FD_ON:1:BOX3
+CS:12010
+```
+it will change the COM Standby frequency display to show the frequency 120.10
 
-# What to do with messages from box
-C:AP_ON:sim/autopilot/servos_toggle::
-C:AP_FD:sim/autopilot/fdir_toggle::
-C:AP_HDG:sim/autopilot/heading::
-C:AP_NAV:sim/autopilot/NAV::
-C:AP_ALT:sim/autopilot/altitude_hold::
-C:AP_APR:sim/autopilot/approach::
-C:AP_VS:sim/autopilot/vertical_speed_pre_sel::
-C:AP_UP:sim/autopilot/vertical_speed_up::
-C:AP_DN:sim/autopilot/vertical_speed_down::
-DR:ALT_ASSIGNED:sim/cockpit/autopilot/altitude:::
-
-# What to send to box
-D:AP_ON:sim/cockpit2/annunciators/autopilot::EXACT?,:BOX3
-D:FD_ON:sim/cockpit2/annunciators/flight_director::EXACT?,:BOX3
-D:AP_HDG:sim/cockpit2/autopilot/heading_mode::EXACT?,:BOX3
-D:AP_NAV:sim/cockpit2/autopilot/nav_status::EQ 2?1,0:BOX3
-D:ALT_SELECT:sim/cockpit/autopilot/altitude::EXACT?,:BOX3
-D:AP_ALT:sim/cockpit2/autopilot/altitude_mode::EQ 6?1,0:BOX3
-D:AP_VV:sim/cockpit/autopilot/vertical_velocity::EXACT?,:BOX3
-D:AP_VS:sim/cockpit2/autopilot/vvi_status::EQ 2?1,0:BOX3
-D:ALTITUDE:sim/cockpit2/gauges/indicators/altitude_ft_pilot::EXACTIFDIFFGT 5?,:BOX3
+The box also has some controls - some rotary encoders and push button switches.
+The Arduino has been programmed to send messages like:
+```
+FLIP_COM (sent when the COM "swap" frequency button is pressed)
+FLIP_NAV (sent when the NAV "swap" frequency button is pressed)
+KHZ_KNOB_COM (sent when the COM frequency inner knob is rotated - if clockwise send an additional "1" or "-1" if counter-clockwise) 
+KHZ_KNOB_COM (sent when the COM frequency outer knob is rotated - if clockwise send an additional "1" or "-1" if counter-clockwise) 
+KHZ_KNOB_NAV (sent when the NAV frequency inner knob is rotated - if clockwise send an additional "1" or "-1" if counter-clockwise) 
+KHZ_KNOB_NAV (sent when the NAV frequency outer knob is rotated - if clockwise send an additional "1" or "-1" if counter-clockwise) 
 ```
 
-The format of each entry follows the following structure.
+The X-Plane plugin configuration file might look like this:
+```
+# give BOX an index name and enter its IP address
+A:BOX4:192.168.0.190:
+
+# Initial values to send to Arduino when plugin finds the box
+I:CU:12455:BOX4
+I:CS:12465:BOX4
+I:NU:10905:BOX4
+I:NS:10915:BOX4
+
+# What X-Plane should do with messages from Arduino
+C:FLIP_COM:sim/radios/com1_standy_flip::
+C:FLIP_NAV:sim/radios/nav1_standy_flip::
+C:MHZ_KNOB_COM:sim/radios/stby_com1_coarse_down:sim/radios/stby_com1_coarse_up:
+C:KHZ_KNOB_COM:sim/radios/stby_com1_fine_down:sim/radios/stby_com1_fine_up:
+C:MHZ_KNOB_NAV:sim/radios/stby_nav1_coarse_down:sim/radios/stby_nav1_coarse_up:
+C:KHZ_KNOB_NAV:sim/radios/stby_nav1_fine_down:sim/radios/stby_nav1_fine_up:
+
+# What data X-Plane should send to the Arduino (sent whenever these change)
+D:CU:sim/cockpit/radios/com1_freq_hz::EXACT?,:BOX4
+D:CS:sim/cockpit/radios/com1_stdby_freq_hz::EXACT?,:BOX4
+D:NU:sim/cockpit/radios/nav1_freq_hz::EXACT?,:BOX4
+D:NS:sim/cockpit/radios/nav1_stdby_freq_hz::EXACT?,:BOX4
+```
+
+
+The format of configuration file entries follow the structure below.
 
 ```
  Configuration 
  
  TYPE:
  	C = Control (eg switch on box etc)
- 	D = Display (eg LED on BOX or instrument etc)	
-	I = send vale to device
+ 	D = Display (eg LED on BOX or instrument or stepper actuator etc)	
+	I = send this value to Arduino box on startup
 	DR = set a data ref with value
  
  Control INI entries
  --------------------
  
- React to a message sent from the box
+ How X-Plane should react to a message sent from the box
  
  Format:
  	C:DEVICE:CMD IF TRUE:CMD IF FALSE:RESERVED
+ where
+	RESERVED - leave blank
  eg:
+	the Arduino might send a message like: "TOGGLE0:1" or "TOGGLE0:0" when
+	a toggle switch is clicked and you might want this to trigger the
+	pump on/off command in X-Plane
+
  	C:TOGGLE0:sim/fuel/fuel_pump_1_on:sim/fuel/fuel_pump_1_off:
  
-	RESERVED - leave blank
  
  Display INI entries
  -------------------
  
- Send data to box if a dataref value changes
+ Send data to the Arduino box if a dataref value changes
  	
  Format:
- 	D:DEVICE:DataRef:INDEX:LOGIC:RESERVED
+ 	D:DEVICE:DataRef:INDEX:LOGIC:RESERVED:BOX_ID
  
  	LOGIC field can be blank if no logic needed
 	RESERVED - leave blank
  where
-	INDEX = index of wanted value in array if dataref a vector
+	INDEX: index of wanted value in array if dataref is a vector.  Leave empty otherwise
+
  	LOGIC:
  		TEST?value if true,value if false
  		eg
@@ -146,91 +237,36 @@ The format of each entry follows the following structure.
  		LTE
  		CHG
  		EXACT
+
+	BOX_ID: A name (eg BOX2) that specifies this action only applies to
+		the DEVICE string coming from a particular BOX.  This means
+		several boxes can have the same DEVICE name (eg LED0) however
+		the configuration file can recognise and react differently to
+		each one.
  	
 
  eg:
- 	D:LED0:sim/cockpit/warnings/annunciators/gear_unsafe:::
- 	D:LED1:sim/flightmodel/2/gear/deploy_ratio:0:EQ 0?1,0:
- 
- 	
- 
+	you want to the Arduino to light LED0 if the gear annunciator warning
+	in X-Plane is set:
+
+ 	D:LED0:sim/cockpit/warnings/annunciators/gear_unsafe:::BOX2
+
+	You want the Arduino to light LED1 if the gear deployment ratio value in
+	X-Plane is 0 and turn led off otherwise:
+
+ 	D:LED1:sim/flightmodel/2/gear/deploy_ratio:0:EQ 0?1,0:BOX2
 ``` 
-## Current Status
 
-Very RAW.  Developed on a Linux system.  The plugin only tested on linux, it
-should be able to be ported to Windows systems (and Mac) but I do not have the
-environment to try this out.
-
-The Arduino stuff does not use the Arduino IDE, instead you edit the source
-code using whatever editor you prefer and compile and load the code using
-Makefiles run from the command line. 
- 
-### Philosophy
-
-The Arduino (or Arduinos - you can have multiple Arduinos) will have
-sensors or display devices connected to it, like switches, LEDs, rotary
-encoders, LCD display, OLED displays, stepper motors etc.
-
-Devices connected to the Arduino are classified as either:
-
- - INPUTS (eg switches etc) that are designed to send data to X Plane.
-
- - OUTPUTS (eg LEDs, LCD displays, stepper motors etc) that are designed to
-   display or react to information sent from X Plane.
-
-An Arduino box can have a mixture of INPUT and OUTPUT devices connected to it.
-
-X Plane requies a plug-in that can interact with one (or more) Arduino "Boxes".
-
-Configuring what X Plane should do with control data sent to it and also what
-data it needs to send to the Arduino, is done with a configuration file (or
-files) located with the X Plane Plugin.
-
-The configuration file is simple text and should be reasonably simple to set
-up, it will list each device on a box with instructions about:
-
-  - what X Plane Commands correspond to messages from box INPUTS (eg "pitot heat switch was turned on")
-
-  - what X-Plane data ref data should be sent to the box as OUTPUTS (eg "the undercarriage warning light should be on")
-
-### The YAAXI system consists of 3 components:
-
-One (or more) *ArduinoBoxes* - an arduino connected to sensors (eg switches)
-and displays or actuators (eg leds, motors) running a program that communicates
-with the X-Plane Arduino Broker Plugin.
-
-An *ArduinoBroker* - an X-Plane plugin that communicates with *ArduinoBoxes*.
-
-*INI File(s)* - placed on the X Plane system, these are used by the broker to
-specify how X Plane should interpret and act on messages from the box devices
-and what data X-Plane should send to the device(s).
-
-
-General Box description
-=======================
-
-a box has:
-
-- INPUTS (like switches/knobs etc) that can send their current state.
-- OUTPUTS (like lights/gauges/displays etc) that can have their state changed
-
-Each box should have a unique ID string to identify it.  (eg "Switch Box v0")
-
-Each of the devices connected to the arduino should have a unique string name
-(eg TOGGLE0, LED0 etc) that is used in messages passed between the arduino and
-the X-Plane broker.  What they actually correspond to (eg "LED0 is the Landing
-Gear Safe Light" or "SWITCH1 is the Pitot Heat Switch") is specified in the INI
-file.
 
 Writing Code for an Arduino in the YAAXI system
 ===============================================
 
-The process typically will some standard common files (main.cpp, Makefile
-helper.mk, simulatePlugin.sh etc).  The idea is these should require no (or
-very minor) changes between projects.
+The process typically will some standard files (main.cpp, Makefile helper.mk,
+simulatePlugin.sh etc).  These standard files should require no (or very minor)
+changes between projects.
 
-You write your customised device code in box.cpp in which you will implement
-several functions declared in box.h (eg a method that sets up your
+You write your customised device code in the file box.cpp in which you will
+implement several functions declared in box.h (eg a method that sets up your
 Arduino pins, a method that the system will repeatedly call where you should
 read any sensor values, a method that sets your output devices if it receives a
 message from X-Plane etc).
@@ -290,11 +326,18 @@ on the broadcast address using port 8889.
 
 If it gets a response "Avduino Box Fish" on port 8888 it will set the IP
 address of the responder as the X-Plane address.
+
+
+
+### Fishing for an X-Plane plugin on the network ###
 ```
 	format: "XP Plugin Fish"
 		try and get a response from the plugin
 		(expecting an "Avduino Box Fish" message in return)
+```
 
+### sending box capabilities to X-Plane ###
+```
 	format "BOXID:[NAME-TYPE, NAME-TYPE, ...]
 		description of box where:
 		BOXID  = unique box identifier (eg "MC:SB00:AEDFE0A5B3")
@@ -308,6 +351,14 @@ address of the responder as the X-Plane address.
 			DI : device that accepts integer value
 			DF : device that accepts a float value
 
+```
+This responses currently not actually used by the plugin however it is meant to allow
+for future enhancements like a GUI configuration system that needs to see what
+messages the Arduino box is capable of sending and what messages it reacts to.
+
+
+### sending control information to X-Plane ###
+```
 
 	format: "NAME:Y"
 		where NAME = control name (eg SWITCH2)
@@ -315,17 +366,23 @@ address of the responder as the X-Plane address.
 		eg "TWIST1:270" or "SWITCH2:1"
 ```
 
+
+
 messages to box from X-Plane:
 ------------------------
 
 The box reads UDP messages sent to it on port 8888
 
+### X-Plane responding to a fishing message from a box ###
 ```
 format: "XP Avduino Fish" 
 	
 	treat IP address this message comes from as the IP address of the X-Plane
 	plugin (and respond with a description of the box)
+```
 
+### X-Plane sending data to a box ###
+```
 format: "NAME:Y"
 	set device value in box
 		where NAME = device name (eg LED1)
@@ -333,12 +390,14 @@ format: "NAME:Y"
 
 	eg:
 		LED2:1	 - means turn LED2 on
+```
 
-all other messages:
+### all other messages: ###
+```
 	return unique box identifier
 ```
 
-see simulatePlugin.sh for examples of communication protocol
+see simulatePlugin.sh and box.h in the "simplest box" for examples of communication protocol
 
 "Simplest" Box Operation
 =======================
@@ -384,6 +443,26 @@ Test with X-Plane
 -----------------
 
 If the initial simulated plugin test works test against X-Plane.
+
+Make sure the following ini entries are in the X-Plane plugin configuration file:
+```
+################# SIMPLEST TEST BOX
+# typical X-Plane config values to add
+
+# give BOX an index and enter its IP address
+A:BOX0:192.168.0.189:
+
+# Initial values to box
+I:LED0:0:BOX0
+
+# What to do with messages from box
+C:SWITCH0:sim/ice/pitot_heat0_on:sim/ice/pitot_heat0_off:
+
+# What to send to box
+D:LED0:nav_lights_on::EXACT?,:BOX0
+```
+
+NB the configuration file lives in the YAAXI plugin directory.
 
 Make sure:
 
