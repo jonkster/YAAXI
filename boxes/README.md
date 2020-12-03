@@ -105,4 +105,9 @@ Use the simulatePlugin.sh shell script to test the device.  It mimics the
 behaviour of the XPlane plugin and will run what you have set up in the box.sh
 file.  NB it requires netcat.
 
+### 6. Configure X-Plane
+
+add appropriate values to the X-Plane Arduino Broker plugin ini file to
+interact with your device
+
 
