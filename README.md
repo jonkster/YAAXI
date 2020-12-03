@@ -92,6 +92,30 @@ the X-Plane broker.  What they actually correspond to (eg "LED0 is the Landing
 Gear Safe Light" or "SWITCH1 is the Pitot Heat Switch") is specified in the INI
 file.
 
+Writing Code for an Arduino in the YAAXI system
+===============================================
+
+The process typically will some standard common files (main.cpp, Makefile
+helper.mk, simulatePlugin.sh etc).  The idea is these should require no (or very minor changes between
+projects).
+
+You write your customised device code in box.cpp in which you will implement
+several functions declared in box.h (eg a method that sets up your
+Arduino pins, a method that the system will repeatedly call where you should
+read any sensor values, a method that sets your output devices if it receives a
+message from X-Plane etc).
+
+The functions you should implement (and what they do) are listed in the:
+```
+boxes/README.md
+```
+file.  Use the example boxes as a guide.
+
+
+You will probably also need to set some pre-processor definitions in box.h to
+match your network.
+
+
 Simplest System
 ---------------
 
@@ -258,5 +282,5 @@ Once you confirm this works you can then:
 - modify the ini file to reflect the devices you add to the Arduino box
 
 ### It may be worth keeping the "simplest box" device around as it can verify
-X-Plane is talking properly to Arduinos via the plugin.
+### X-Plane is talking properly to Arduinos via the plugin.
 
