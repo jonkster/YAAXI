@@ -53,7 +53,7 @@ An Arduino box can have a mixture of INPUT and OUTPUT devices connected to it.
 X Plane requies a plug-in that can interact with one (or more) Arduino "Boxes".
 
 Configuring what X Plane should do with control data sent to it and also what
-data it needs to send to the ARduino, is done with a configuration file (or
+data it needs to send to the Arduino, is done with a configuration file (or
 files) located with the X Plane Plugin.
 
 The configuration file is simple text and should be reasonably simple to set
@@ -110,10 +110,16 @@ numbers in:
 ```
 boxes/simplest/box.cpp
 ```
-if required.
 
+This allows example you to test the system works and is used as the basis of
+developing other systems.  Having this simple device available for future use
+can help in debugging communications between X-Plane and arduinos when you work
+on more complicated setups.
 
-This allows you to test the system works.
+A more involved system is a dual COM and NAV radio system - see
+```
+boxes/comnav2box
+```
 
 
 YAAXI Communication Protocol
@@ -251,4 +257,6 @@ Once you confirm this works you can then:
 
 - modify the ini file to reflect the devices you add to the Arduino box
 
+### It may be worth keeping the "simplest box" device around as it can verify
+X-Plane is talking properly to Arduinos via the plugin.
 
