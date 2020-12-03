@@ -108,22 +108,26 @@ void flipFrequencies() {
 			tmp = currentState.c1Stb;
 			currentState.c1Stb = currentState.c1Use;
 			currentState.c1Use = tmp;
+			sendMessage("FLIP_COM1\n");
 			break;
 		case 1:
 			tmp = currentState.c2Stb;
 			currentState.c2Stb = currentState.c2Use;
 			currentState.c2Use = tmp;
+			sendMessage("FLIP_COM2\n");
 			break;
 		case 2:
 			tmp = currentState.n1Stb;
 			currentState.n1Stb = currentState.n1Use;
 			currentState.n1Use = tmp;
+			sendMessage("FLIP_NAV1\n");
 			break;
 		case 3:
 		default:
 			tmp = currentState.n2Stb;
 			currentState.n2Stb = currentState.n2Use;
 			currentState.n2Use = tmp;
+			sendMessage("FLIP_NAV2\n");
 			break;
 	}
 }
@@ -164,14 +168,14 @@ void setStartState(void) {
 	lcd1.clear();
 	
 	// set starting frequencies
-	currentState.c1Use = 120100;
-	currentState.c1Stb = 125100;
-	currentState.c2Use = 121900;
-	currentState.c2Stb = 124550;
-	currentState.n1Use = 110200;
-	currentState.n1Stb = 107100;
-	currentState.n2Use = 109300;
-	currentState.n2Stb = 108200;
+	currentState.c1Use = 12010;
+	currentState.c1Stb = 12510;
+	currentState.c2Use = 12190;
+	currentState.c2Stb = 12455;
+	currentState.n1Use = 11020;
+	currentState.n1Stb = 10710;
+	currentState.n2Use = 10930;
+	currentState.n2Stb = 10820;
 	currentState.activeDisplay = 0;
 
 }
@@ -255,14 +259,14 @@ void testScreens() {
 
 void normaliseFreqs() {
 	// adjust freqs to fit spectrum
-	currentState.c1Use = adjustFreq(currentState.c1Use, 118000, 136975);
-	currentState.c1Stb = adjustFreq(currentState.c1Stb, 118000, 136975);
-	currentState.c2Use = adjustFreq(currentState.c2Use, 118000, 136975);
-	currentState.c2Stb = adjustFreq(currentState.c2Stb, 118000, 136975);
-	currentState.n1Use = adjustFreq(currentState.n1Use, 108000, 117950);
-	currentState.n1Stb = adjustFreq(currentState.n1Stb, 108000, 117950);
-	currentState.n2Use = adjustFreq(currentState.n2Use, 108000, 117950);
-	currentState.n2Stb = adjustFreq(currentState.n2Stb, 108000, 117950);
+	currentState.c1Use = adjustFreq(currentState.c1Use, 11800, 13695);
+	currentState.c1Stb = adjustFreq(currentState.c1Stb, 11800, 13695);
+	currentState.c2Use = adjustFreq(currentState.c2Use, 11800, 13695);
+	currentState.c2Stb = adjustFreq(currentState.c2Stb, 11800, 13695);
+	currentState.n1Use = adjustFreq(currentState.n1Use, 10800, 11795);
+	currentState.n1Stb = adjustFreq(currentState.n1Stb, 10800, 11795);
+	currentState.n2Use = adjustFreq(currentState.n2Use, 10800, 11795);
+	currentState.n2Stb = adjustFreq(currentState.n2Stb, 10800, 11795);
 }
 
 
@@ -282,42 +286,42 @@ void printFreqs() {
 	char buf[15];
 	// c1 use
 	lcd0.setCursor(0, 0);
-	dtostrf(truncf(100 * (double)currentState.c1Use/1000)/100, 5, 2, buf);
+	dtostrf((double)(currentState.c1Use)/100, 6, 2, buf);
 	lcd0.print(buf);
 
 	// c1 stdby
 	lcd0.setCursor(8, 0);
-	dtostrf(truncf(100 * (double)currentState.c1Stb/1000)/100, 5, 2, buf);
+	dtostrf((double)(currentState.c1Stb)/100, 6, 2, buf);
 	lcd0.print(buf);
 
 	// c2 use
 	lcd0.setCursor(0, 1);
-	dtostrf(truncf(100 * (double)currentState.c2Use/1000)/100, 5, 2, buf);
+	dtostrf((double)(currentState.c2Use)/100, 6, 2, buf);
 	lcd0.print(buf);
 
 	// c2 stdby
 	lcd0.setCursor(8, 1);
-	dtostrf(truncf(100 * (double)currentState.c2Stb/1000)/100, 5, 2, buf);
+	dtostrf((double)(currentState.c2Stb)/100, 6, 2, buf);
 	lcd0.print(buf);
 
 	// n1 use
 	lcd1.setCursor(0, 0);
-	dtostrf(truncf(100 * (double)currentState.n1Use/1000)/100, 5, 2, buf);
+	dtostrf((double)(currentState.n1Use)/100, 6, 2, buf);
 	lcd1.print(buf);
 
 	// n1 stdby
 	lcd1.setCursor(8, 0);
-	dtostrf(truncf(100 * (double)currentState.n1Stb/1000)/100, 5, 2, buf);
+	dtostrf((double)(currentState.n1Stb)/100, 6, 2, buf);
 	lcd1.print(buf);
 
 	// n2 use
 	lcd1.setCursor(0, 1);
-	dtostrf(truncf(100 * (double)currentState.n2Use/1000)/100, 5, 2, buf);
+	dtostrf((double)(currentState.n2Use)/100, 6, 2, buf);
 	lcd1.print(buf);
 
 	// n2 stdby
 	lcd1.setCursor(8, 1);
-	dtostrf(truncf(100 * (double)currentState.n2Stb/1000)/100, 5, 2, buf);
+	dtostrf((double)(currentState.n2Stb)/100, 6, 2, buf);
 	lcd1.print(buf);
 }
 
@@ -365,7 +369,7 @@ void setControl(char* device, char* value) {
 bool sendAnyChanges() {
 	// send any changes we know about to XPlane
 	bool changes = false;
-	if (currentState.c1Use != prevState.c1Use) {
+	/*if (currentState.c1Use != prevState.c1Use) {
 		sendDataTypeLong("C1U", currentState.c1Use);   
 		changes = true;
 	}
@@ -396,7 +400,7 @@ bool sendAnyChanges() {
 	if (currentState.n2Stb != prevState.n2Stb) {
 		sendDataTypeLong("N2S", currentState.c1Use);   
 		changes = true;
-	}
+	}*/
 	return changes;
 }
 
@@ -415,28 +419,62 @@ void boxMainLoop(void) {
 		// get changes to frequency
 		int incKhz = getEncoderDir(0);
 		int incMhz = getEncoderDir(1);
-		if ((incKhz != 0) || (incMhz != 0)) {
-			// make changes to active Unit
+		if (incKhz != 0) {
 			switch(currentState.activeDisplay) {
 				case 0:
-					currentState.c1Stb -= incKhz * 50;
-					currentState.c1Stb -= incMhz * 1000;
+					sendDataTypeInt("KHZ_KNOB_COM1", incKhz);
 					break;
 				case 1:
-					currentState.c2Stb -= incKhz * 50;
-					currentState.c2Stb -= incMhz * 1000;
+					sendDataTypeInt("KHZ_KNOB_COM2", incKhz);
 					break;
 				case 2:
-					currentState.n1Stb -= incKhz * 50;
-					currentState.n1Stb -= incMhz * 1000;
+					sendDataTypeInt("KHZ_KNOB_NAV1", incKhz);
 					break;
 				case 3:
 				default:
-					currentState.n2Stb -= incKhz * 50;
-					currentState.n2Stb -= incMhz * 1000;
+					sendDataTypeInt("KHZ_KNOB_NAV2", incKhz);
 					break;
 			}
 		}
+		if (incMhz != 0) {
+			switch(currentState.activeDisplay) {
+				case 0:
+					sendDataTypeInt("MHZ_KNOB_COM1", incMhz);
+					break;
+				case 1:
+					sendDataTypeInt("MHZ_KNOB_COM2", incMhz);
+					break;
+				case 2:
+					sendDataTypeInt("MHZ_KNOB_NAV1", incMhz);
+					break;
+				case 3:
+				default:
+					sendDataTypeInt("MHZ_KNOB_NAV2", incMhz);
+					break;
+			}
+		}
+		/*if ((incKhz != 0) || (incMhz != 0)) {
+			// make changes to active Unit
+			switch(currentState.activeDisplay) {
+				case 0:
+					currentState.c1Stb -= incKhz * 5;
+					currentState.c1Stb -= incMhz * 100;
+					break;
+				case 1:
+					currentState.c2Stb -= incKhz * 5;
+					currentState.c2Stb -= incMhz * 100;
+					break;
+				case 2:
+					currentState.n1Stb -= incKhz * 5;
+					currentState.n1Stb -= incMhz * 100;
+					break;
+				case 3:
+				default:
+					currentState.n2Stb -= incKhz * 5;
+					currentState.n2Stb -= incMhz * 100;
+					break;
+			}
+		}*/
 		normaliseFreqs();
 
 		if (flipFlopPushed()) {

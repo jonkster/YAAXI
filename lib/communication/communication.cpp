@@ -28,7 +28,6 @@ EthernetUDP	Udp;
 bool foundXP = false;
 bool verbose = DEBUG_MODE;
 
-void sendMessage(const char* msg);
 
 void setupEthernet(byte *mac, IPAddress ipa, IPAddress bCast, const char* bid, const char* bDefs) {
 	Ethernet.begin(mac, ipa);
@@ -42,6 +41,12 @@ void setupEthernet(byte *mac, IPAddress ipa, IPAddress bCast, const char* bid, c
 
 	boxDefs = (char*)malloc(strlen(bDefs)+1);
 	strcpy(boxDefs, bDefs);
+}
+
+void sendDataTypeInt(const char* code, int data ) {
+	char msg[48];
+	snprintf(msg, sizeof(msg), "%s:%i\n", code, data);
+	sendMessage(msg);
 }
 
 void sendDataTypeLong(const char* code, long data ) {

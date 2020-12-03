@@ -26,9 +26,11 @@ extern "C" {
 
 	void sendBoxConfig(void);
 
+	void sendDataTypeInt(const char* code, int data);
+
 	void sendDataTypeLong(const char* code, long data);
 
-	//void sendMessage(const char* msg);
+	void sendMessage(const char* msg);
 
 	void setupEthernet(byte *mac, IPAddress ipa, IPAddress bCast, const char* bid, const char* bDefs);
 
