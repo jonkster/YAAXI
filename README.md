@@ -24,6 +24,12 @@ A simple default example of the Arduino code is supplied that can be used to
 test the setup and communications with X-Plane as the basis of your customised
 systems.
 
+A more complicated example is also provided (a dual COM and dual NAV radio
+setup).
+
+![Front Panel](boxes/comnav2box/comnav2box.jpg?raw=true "COM-NAV box front")
+
+
 
 ## Current Status
 
