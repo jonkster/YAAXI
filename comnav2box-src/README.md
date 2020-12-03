@@ -40,7 +40,8 @@ ENCODER1:234
 Making a new Arduino box
 ========================
 
-1. copy the generic files to a new directory:
+### 1. copy the generic files to a new directory:
+
 ```
 main.cpp
 box.h
@@ -50,7 +51,7 @@ box.sh
 ```
 
 
-2. in box.h specify an appropriate values for the following pre processor defines:
+### 2. in box.h specify an appropriate values for the following pre processor defines:
 
 ```
 BOXID
@@ -78,7 +79,7 @@ useful so it can be used in future.
 The IP addresses must be hard coded at the moment, your arduino will need a
 unique IP address on your network.
 
-3. create a file:
+### 3. create a file:
 ```
 box.cpp
 ```
@@ -129,7 +130,7 @@ void boxMainLoop(void);
 	switches, get encoder values etc.
 
 
-4. Using the existing script box.sh as a guide, add any test messages that can
+### 4. Using the existing script box.sh as a guide, add any test messages that can
 be used to establish the system is working without having to fire up XPlane
 repeatedly.
 
