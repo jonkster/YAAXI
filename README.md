@@ -96,8 +96,8 @@ Writing Code for an Arduino in the YAAXI system
 ===============================================
 
 The process typically will some standard common files (main.cpp, Makefile
-helper.mk, simulatePlugin.sh etc).  The idea is these should require no (or very minor changes between
-projects).
+helper.mk, simulatePlugin.sh etc).  The idea is these should require no (or
+very minor) changes between projects.
 
 You write your customised device code in box.cpp in which you will implement
 several functions declared in box.h (eg a method that sets up your
@@ -113,7 +113,8 @@ file.  Use the example boxes as a guide.
 
 
 You will probably also need to set some pre-processor definitions in box.h to
-match your network.
+match your network and may need to modify the Makefile to match your device (eg
+if a Uno or Mega etc).
 
 
 Simplest System
