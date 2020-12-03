@@ -3,14 +3,21 @@
 A simple Arduino/X-Plane interface system for adding physical cockpit controls
 to X-Plane.
 
-(NB simple means simple configuration and set up if you are comfortable with
-Arduino programming in C and interfacing of devices to Arduino.  It doesn't
-mean gui configuration screens and/or drag and drop customisation etc).
+### NB simple means simple configuration and set up if you are comfortable (or
+### are willing to get comfortable) with Arduino programming in C and
+### interfacing of devices to Arduino.  It doesn't mean gui configuration
+### screens and/or drag and drop customisation etc.
 
 ## Current Status
 
-Very RAW.
+Very RAW.  Developed on a Linux system.  The plugin only tested on linux, it
+should be able to be ported to Windows systems (and Mac) but I do not have the
+environment to try this out.
 
+The Arduino stuff does not use the Arduino IDE, instead you edit the source
+code using whatever editor you prefer and compile and load the code using
+Makefiles run from the command line. 
+ 
 ### Philosophy
 
 The Arduino device ("Box") has one or more devices connected to it, like
@@ -23,9 +30,10 @@ Devices are classified as either:
  - Displays (eg LEDs, LCD displays etc) that are designed to display information
 sent from X Plane.
 
-An Arduino box can have a mixture of control and display devices.
+An Arduino box can have a mixture of control and display devices connected to
+it.
 
-X Plane requies a plug in that can interact with one or more "Boxes".
+X Plane requies a plug in that can interact with one (or more) Arduino "Boxes".
 
 Configuring what X Plane should do with control data sent to it and also what
 display data it needs to send to the box, is done with a configuration file (or
@@ -54,20 +62,22 @@ customised system.
 
 ### It consists of 3 components:
 
-*AvduinoBox* an Arduino program that communicates with the X-Plane Arduino
-Broker Plugin.
+One (or more) *AvduinoBoxes* - an arduino connected to sensors (eg switches)
+and displays (eg leds) running a program that communicates with the X-Plane
+Arduino Broker Plugin.
 
-*ArduinoBroker* is an X-Plane plugin that communicates with an Arduino that is
-running the xpDuinoBox program.
+An *ArduinoBroker* - an X-Plane plugin that communicates with *ArduinoBoxes*.
 
-*INI File(s)* on the X Plane system that tailor specify how X Plane should
-interpret and act on the box devices.
+*INI File(s)* - placed on the X Plane system, these are used by the broker to
+specify how X Plane should interpret and act on messages from the box devices
+and what data XPlane should send to the device(s).
 
 
 General Box description
 =======================
 
 a box has:
+
 - controls (like switches/knobs etc) that can send their current state.
 - displays (like lights/gauges/displays etc) that can have their state changed
 
@@ -76,63 +86,60 @@ Each box should have a unique ID
 Box v0-9aef456")
 
 Each of the controls/displays should have a unique string name (eg TOGGLE0,
-LED0 etc)
+LED0 etc) that is used in messages passed between the arduino and the X-Plane
+broker.  What they actually correspond to (eg "LED0 is the Landing Gear Safe
+Light" or "SWITCH1 is the Pitot Heat Switch" is specified in the INI file.
 
-Prototype Box Operation
-=======================
+A simple test example is located in
+```
+boxes/simplest
+```
 
-The protoptype box initially used to develop the system consists of a number of
-devices connected to an Arduino Mega with an etherney shield.
+Use this code to set up your system and check it all works with X-Plane before
+developing more complicated setups.  You can then copy the simplest code to a
+new directory and build on it to make what you need.
 
-The prototype example box consists of:
+The simplest Arduino setup should have a switch on pin 12 and uses the builtin
+LED pin.  You can modify the pin numbers in
+```
+boxes/simplest/box.cpp
+```
+if required.
 
-Controls:
----------
-- 2 toggle switches,
-- 2 momentary on switches,
-- 2 rotary encoders that also have momentary on switches and
-- a 3 position rotary switch that acts like 2 toggle switches but only 1 can be
-  on at a time)
+This allows you to test the system works.
 
-Displays:
---------
-- 6 leds (3 red and 3 green)
+Connect an Arduino with an ethernet shield to your development box, and run:
+```
+make
+make upload
+```
+to program the Arduino.
 
-The box has 2 modes: normal and diagnostic. It should boot up in normal mode.
+Make sure
+1. the plugin is installed in X-Plane, 
+2. the ini file is set up as described in the simplest README,
+3. the Arduino and X-Plane are connected on the same network
+4. X-Plane is running the standard Cessna 172
 
-In normal mode, the box will flash all red leds regularly until it can connect
-to an XP plugin.  After that it will send any detected control changes
-(ie changes of switch/knob positions) to the plugin and act on device messages
-from the plugin by setting leds.
-
-In diagnostic mode, changing switches on the box should generate different led light
-displays - this used to test all switches work
-
-to change modes:
-----------------
-
-- hold both rotary encoder push buttons down simultaneously to put box in diagnostic mode
-
-- hold both red push buttons down simultaneously to return box to normal mode
-
+the switch on the Arduino should control the pitot heat switch in X-Plane and
+the LED should light according to the position of the Nav Light switch in
+X-Plane.
 
 
 Communication Protocol
 ======================
 
-box IP currently hard coded to be 192.168.0.178
-
 messages from box to XP
 -----------------------
 
-Box sends UDP messages to XP plugin using port 8889
+The Arduino Box sends UDP messages to the XP plugin using port 8889
 
 To find the Xplane plugin, on box startup it will send a "XP Plugin Fish" string
 on the broadcast address using port 8889.
 
 If it gets a response "Avduino Box Fish" on port 8888 it will set the IP
 address of the responder as the XPlane address.
-
+```
 	format: "XP Plugin Fish"
 		try and get a response from the plugin
 		(expecting an "Avduino Box Fish" message in return)
@@ -155,13 +162,14 @@ address of the responder as the XPlane address.
 		where NAME = control name (eg SWITCH2)
 		      Y = value 
 		eg "TWIST1:270" or "SWITCH2:1"
-
+```
 
 messages to box from XP:
 ------------------------
 
 The box reads UDP messages sent to it on port 8888
 
+```
 format: "XP Avduino Fish" 
 	
 	treat IP address this message comes from as the IP address of the XP
@@ -177,17 +185,31 @@ format: "NAME:Y"
 
 all other messages:
 	return unique box identifier
-
+```
 
 see simulatePlugin.sh for examples of communication protocol
 
+"Simplest" Box Operation
+=======================
+
+The protoptype box initially used to develop the system consists of a single
+LED and a single switch on an arduino with an ethernet shield.
+
+The code for this is in the
+```
+boxes/simplest
+```
+directory.
 
 ### out of the box
 
-The default Arduino program supplied is set up to respond to a switch on pin 8
-and a led on pin 7 that allow you to test the system works (the switch should
-set the pitot heat switch in X-Plane and the LED should reflect the position of
-the Nav Light switch in X-Plane).
+The "simplest" box IP currently hard coded to be 192.168.0.189 - change this to
+an appropriate address for your network.
+
+The default Arduino program supplied is set up to respond to a switch on pin 12
+and a led on the defalt LED pin that allow you to test the system works (the
+switch should set the pitot heat switch in X-Plane and the LED should reflect
+the position of the Nav Light switch in X-Plane).
 
 Once you confirm this works you can then:
 
@@ -196,30 +218,22 @@ Once you confirm this works you can then:
 
 - modify the ini file to reflect the devices you add to the Arduino box
 
-## How it works
-
-The Arduino is programmed with code you write, based on the supplied default C
-code.  The Arduino should be connected via ethernet to the same network as the
-computer
-running X-Plane.
-
-X-Plane needs to have the ArduinoBroker plugin installed.
-
 ### Simple example
 
 
 ## Installation
 
-1. Set up the Arduino initially with a switch connected to data pin 8 and a led
-   to pin 7 (this just for testing purposes)
+1. Set up the Arduino initially with a switch connected to data pin 12.  If you
+   do not have access to the default Arduino LED pin edit the box.cpp file and
+   connect a LED to the pin you want to use.  (this just for testing purposes)
 2. Compile and Upload the default C program to the Arduino
 3. Connect the Arduino via ethernet to the same network as the X-Plane box
 4. Copy the plugin directory to X-Plane (this will include the test INI file.
 5. Run X-Plane with standard C172
-6. Confirm that the physical switch connected to data pin 8 will set the
+6. Confirm that the physical switch connected to data pin 12 will set the
    'virtual' Pitot Heat Switch in X-Plane
-7. Confirm that the 'virtual' Nav Light Switch changed in X-Plane will light a
-   LED connected to Arduino pin 7
+7. Confirm that the 'virtual' Nav Light Switch changed in X-Plane will light the 
+   LED connected to the Arduino
 
 *THEN*
 
