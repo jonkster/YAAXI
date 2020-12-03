@@ -19,7 +19,7 @@ ARDUINO_DIR       = /usr/share/arduino
 #USER_LIB_PATH     =  $(realpath $(PROJECT_DIR)/lib)
 USER_LIB_PATH     =  $(PROJECT_DIR)/lib
 
-ARDUINO_LIBS      += LiquidCrystal encoderlib communication Ethernet SPI
+ARDUINO_LIBS      += communication Ethernet SPI
 
 ### BOARD_TAG & BOARD_SUB
 #BOARD_TAG         = uno
