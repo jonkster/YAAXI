@@ -1,4 +1,4 @@
-﻿# YAAXI
+﻿# YAAXI - Yet Another Arduino X-Plane Interface :)
 
 A simple Arduino/X-Plane interface system for adding physical cockpit controls
 to X-Plane.
@@ -29,8 +29,132 @@ setup).
 
 ![Front Panel](boxes/comnav2box/comnav2box.jpg?raw=true "COM-NAV box front")
 
+There are other Arduino/X-Plane interfaces available - this one is not to
+replace them as they may be more refined and better suited to most users.  This
+one is meant to be quick and dirty and flexible and allows (hopefully) a lot of
+flexibility.
+
+## In a Nutshell
+
+It is built around a simple message protocol.  It communicates using UDP over
+ethernet.  The Arduino devices do not know anything about X-Plane, a
+configuration file in X-Plane worries about that.
+
+(As an example, the Arduino just knows it has a Switch called SWITCH0, a LED
+called LED0 etc and the conguration file in X-Plane maps LED0 to the gear
+unsafe light and SWITCH0 to the gear selector).
 
 
+The Configuration File on X-Plane
+=================================
+
+
+An example of configuration values for a Garmin GNS430 is shown below.
+
+The Arduino has a number of switches named like:
+```
+AP_ON
+FD_ON
+etc
+```
+
+and will send information about these switches to X-Plane whenever they change.
+X-Plane will react to these messages.
+
+The configuration file maps these to X-Plane commands
+
+```
+################# AUTOPILOT BOX
+A:BOX3:192.168.0.182:
+# Initial values to box
+I:AP_ON:0:BOX3
+I:FD_ON:1:BOX3
+
+# What to do with messages from box
+C:AP_ON:sim/autopilot/servos_toggle::
+C:AP_FD:sim/autopilot/fdir_toggle::
+C:AP_HDG:sim/autopilot/heading::
+C:AP_NAV:sim/autopilot/NAV::
+C:AP_ALT:sim/autopilot/altitude_hold::
+C:AP_APR:sim/autopilot/approach::
+C:AP_VS:sim/autopilot/vertical_speed_pre_sel::
+C:AP_UP:sim/autopilot/vertical_speed_up::
+C:AP_DN:sim/autopilot/vertical_speed_down::
+DR:ALT_ASSIGNED:sim/cockpit/autopilot/altitude:::
+
+# What to send to box
+D:AP_ON:sim/cockpit2/annunciators/autopilot::EXACT?,:BOX3
+D:FD_ON:sim/cockpit2/annunciators/flight_director::EXACT?,:BOX3
+D:AP_HDG:sim/cockpit2/autopilot/heading_mode::EXACT?,:BOX3
+D:AP_NAV:sim/cockpit2/autopilot/nav_status::EQ 2?1,0:BOX3
+D:ALT_SELECT:sim/cockpit/autopilot/altitude::EXACT?,:BOX3
+D:AP_ALT:sim/cockpit2/autopilot/altitude_mode::EQ 6?1,0:BOX3
+D:AP_VV:sim/cockpit/autopilot/vertical_velocity::EXACT?,:BOX3
+D:AP_VS:sim/cockpit2/autopilot/vvi_status::EQ 2?1,0:BOX3
+D:ALTITUDE:sim/cockpit2/gauges/indicators/altitude_ft_pilot::EXACTIFDIFFGT 5?,:BOX3
+```
+
+The format of each entry follows the following structure.
+
+```
+ Configuration 
+ 
+ TYPE:
+ 	C = Control (eg switch on box etc)
+ 	D = Display (eg LED on BOX or instrument etc)	
+	I = send vale to device
+	DR = set a data ref with value
+ 
+ Control INI entries
+ --------------------
+ 
+ React to a message sent from the box
+ 
+ Format:
+ 	C:DEVICE:CMD IF TRUE:CMD IF FALSE:RESERVED
+ eg:
+ 	C:TOGGLE0:sim/fuel/fuel_pump_1_on:sim/fuel/fuel_pump_1_off:
+ 
+	RESERVED - leave blank
+ 
+ Display INI entries
+ -------------------
+ 
+ Send data to box if a dataref value changes
+ 	
+ Format:
+ 	D:DEVICE:DataRef:INDEX:LOGIC:RESERVED
+ 
+ 	LOGIC field can be blank if no logic needed
+	RESERVED - leave blank
+ where
+	INDEX = index of wanted value in array if dataref a vector
+ 	LOGIC:
+ 		TEST?value if true,value if false
+ 		eg
+		 	EQ 0?1,0
+		 	if dataref value == 0 send a 1 else send a 0
+ 
+		 	GT 10?1,0
+		 	if dataref value > 0 send a 1 else send a 0
+ 
+ 		comparison operators:
+ 		EQ
+ 		GT
+ 		LT
+ 		GTE
+ 		LTE
+ 		CHG
+ 		EXACT
+ 	
+
+ eg:
+ 	D:LED0:sim/cockpit/warnings/annunciators/gear_unsafe:::
+ 	D:LED1:sim/flightmodel/2/gear/deploy_ratio:0:EQ 0?1,0:
+ 
+ 	
+ 
+``` 
 ## Current Status
 
 Very RAW.  Developed on a Linux system.  The plugin only tested on linux, it
