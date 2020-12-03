@@ -5,7 +5,7 @@
 
 ### PROJECT_DIR
 ### This is the path to where you have created/cloned your project
-PROJECT_DIR       = $(shell dirname $(shell pwd))
+PROJECT_DIR       = $(shell dirname $(shell pwd))/..
 
 ### ARDMK_DIR
 ### Path to the Arduino-Makefile directory.
@@ -22,9 +22,8 @@ USER_LIB_PATH     =  $(PROJECT_DIR)/lib
 ARDUINO_LIBS      += communication Ethernet SPI
 
 ### BOARD_TAG & BOARD_SUB
-#BOARD_TAG         = uno
-BOARD_TAG         = mega2560
-#BOARD_SUB         = atmega2560
+BOARD_TAG         = uno
+#BOARD_TAG         = mega2560
 
 ### MONITOR_PORT
 #MONITOR_PORT      = /dev/ttyUSB*

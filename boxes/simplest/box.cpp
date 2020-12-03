@@ -3,8 +3,8 @@
 #include "box.h"
 
 // PIN ASSIGNMENTS
-#define LED0 LED_BUILTIN
-#define SWITCH0  12
+#define LED0 8
+#define SWITCH0  9
 
 struct tBoxState {
 	bool switch0;
@@ -27,6 +27,7 @@ void boxSetup() {
 	pinMode(SWITCH0, INPUT_PULLUP);
 	delay(200);
 	digitalWrite(LED0, 0);
+	clearChanges();
 
 }
 
