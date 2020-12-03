@@ -338,7 +338,7 @@ void showNetworkInfo(void) {
 void setControl(char* device, char* value) {
 	// act on message from XPlane by setting our systems state
 	unsigned long v = atol(value);
-	if (strcmp("C1USE", device) == 0) {
+	if (strcmp("C1U", device) == 0) {
 		currentState.c1Use = v;	
 	} else if (strcmp("C1S", device) == 0) {
 		currentState.c1Stb = v;	
