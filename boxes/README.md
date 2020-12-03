@@ -93,8 +93,16 @@ void boxMainLoop(void);
 	switches, get encoder values etc.
 
 
-### 4. Using the existing script box.sh as a guide, add any test messages that can
+### 4. Write some simple tests in the XPlane simulation script.
+
+Using the existing script box.sh as a guide, add any test messages that can
 be used to establish the system is working without having to fire up XPlane
 repeatedly.
+
+### 5. Test the device
+
+Use the simulatePlugin.sh shell script to test the device.  It mimics the
+behaviour of the XPlane plugin and will run what you have set up in the box.sh
+file.  NB it requires netcat.
 
 
