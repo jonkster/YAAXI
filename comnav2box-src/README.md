@@ -42,58 +42,58 @@ Making a new Arduino box
 
 1. copy the generic files to a new directory:
 ```
-	main.cpp
-	box.h
-	Makefile
-	simulatePlugin.sh
-	box.sh
+main.cpp
+box.h
+Makefile
+simulatePlugin.sh
+box.sh
 ```
 
 
 2. in box.h specify an appropriate values for the following pre processor defines:
 
 ```
-	BOXID
-	BOX_DEFINITIONS
-	IP_ADDRESS
-	MAC_ADDRESS
-	NETWORK_BROADCAST_ADDRESS
+BOXID
+BOX_DEFINITIONS
+IP_ADDRESS
+MAC_ADDRESS
+NETWORK_BROADCAST_ADDRESS
 ```
 
-	eg
+eg
 
 ```
-	#define BOXID "Motion Capture-CN001A-00000"
-	#define BOX_DEFINITIONS "C1U-CI,C1S-CI,C2U-CI,C2S-CI,N1U-CI,N1S-CI,N2U-CI,N2S-CI"
-	#define IP_ADDRESS 192, 168, 0, 190
-	#define MAC_ADDRESS 0xC0, 0x90, 0x33, 0x53, 0xB8, 0xDF
-	#define NETWORK_BROADCAST_ADDRESS 192, 168, 0, 255
+#define BOXID "Motion Capture-CN001A-00000"
+#define BOX_DEFINITIONS "C1U-CI,C1S-CI,C2U-CI,C2S-CI,N1U-CI,N1S-CI,N2U-CI,N2S-CI"
+#define IP_ADDRESS 192, 168, 0, 190
+#define MAC_ADDRESS 0xC0, 0x90, 0x33, 0x53, 0xB8, 0xDF
+#define NETWORK_BROADCAST_ADDRESS 192, 168, 0, 255
 ```
 
-	NB the BOX_DEFINITIONS setting is not currently used but is meant to allow
-	XPlane to potentially present a GUI style configuration option rather
-	than needing the user to edit the initialisation file by hand, so try
-	and make it useful so it can be used in future.
+NB the BOX_DEFINITIONS setting is not currently used but is meant to allow
+XPlane to potentially present a GUI style configuration option rather than
+needing the user to edit the initialisation file by hand, so try and make it
+useful so it can be used in future.
 
-	The IP addresses must be hard coded at the moment, your arduino will
-	need a unique IP address on your network.
+The IP addresses must be hard coded at the moment, your arduino will need a
+unique IP address on your network.
 
 3. create a file:
 ```
-	box.cpp
+box.cpp
 ```
 
-	In box.cpp, you set up any device specific code.  You must define the
-	following functions that are declared in the box.h file above:
+In box.cpp, you set up any device specific code.  You must define the following
+functions that are declared in the box.h file above:
 
 ```
-	void boxSetup(void);
-	void clearChanges(void);
-	void setStartState(void);
-	void noConnectionActions(void);
-	bool sendAnyChanges(void);
-	void setControl(char* device, char* value);
-	void boxMainLoop(void);
+void boxSetup(void);
+void clearChanges(void);
+void setStartState(void);
+void noConnectionActions(void);
+bool sendAnyChanges(void);
+void setControl(char* device, char* value);
+void boxMainLoop(void);
 ```
 
 ### What the required methods above should implement:
@@ -176,7 +176,6 @@ address of the responder as the XPlane address.
 		where NAME = control name (eg SWITCH2)
 		      Y = value 
 		eg "TWIST1:270" or "SWITCH2:1"
-
 ```
 
 messages to box from XP:
@@ -186,22 +185,21 @@ The box reads UDP messages sent to it on port 8888
 
 ```
 format: "XP Avduino Fish" 
-	
-	treat IP address this message comes from as the IP address of the XP
-	plugin (and respond with a description of the box)
-
-format: "NAME:Y"
-	set device value in box
-		where NAME = device name (eg LED1)
-		      Y = value
-
-	eg:
-		LED2:1	 - means turn LED2 on
-
-all other messages:
-	return unique box identifier
+```
+treat IP address this message comes from as the IP address of the XP plugin
+(and respond with a description of the box)
 
 ```
+format: "NAME:Y"
+set device value in box
+	where:
+		NAME = device name (eg LED1)
+		Y = value
+	eg:
+		LED2:1	 - means turn LED2 on
+```
+all other messages: return unique box identifier
+
 
 see simulatePlugin.sh for examples of communication protocol
 
