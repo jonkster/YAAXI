@@ -1,9 +1,10 @@
 #ifndef __COMMUNICATION_H__
 #define __COMMUNICATION_H__
 
-//#include <SPI.h>
+#include <Arduino.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
+#include <stdbool.h>
 
 #define MSG_BOX_FISH "Avduino Box Fish"
 
@@ -27,7 +28,7 @@ extern "C" {
 
 	void sendDataTypeLong(const char* code, long data);
 
-	void sendMessage(const char* msg);
+	//void sendMessage(const char* msg);
 
 	void setupEthernet(byte *mac, IPAddress ipa, IPAddress bCast, const char* bid, const char* bDefs);
 

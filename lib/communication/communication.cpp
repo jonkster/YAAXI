@@ -28,6 +28,7 @@ EthernetUDP	Udp;
 bool foundXP = false;
 bool verbose = DEBUG_MODE;
 
+void sendMessage(const char* msg);
 
 void setupEthernet(byte *mac, IPAddress ipa, IPAddress bCast, const char* bid, const char* bDefs) {
 	Ethernet.begin(mac, ipa);

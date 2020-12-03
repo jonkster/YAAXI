@@ -1,6 +1,4 @@
 #include <Arduino.h>
-#include <LiquidCrystal.h>
-#include <avr/interrupt.h>
 #include "communication.h"
 #include "box.h"
 
