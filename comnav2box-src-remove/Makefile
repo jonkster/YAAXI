@@ -19,9 +19,10 @@ ARDUINO_DIR       = /usr/share/arduino
 #USER_LIB_PATH     =  $(realpath $(PROJECT_DIR)/lib)
 USER_LIB_PATH     =  $(PROJECT_DIR)/lib
 
-ARDUINO_LIBS      += SPI Keypad XC3714 RotencoderInt Ethernet
+ARDUINO_LIBS      += LiquidCrystal encoderlib communication Ethernet SPI
 
 ### BOARD_TAG & BOARD_SUB
+#BOARD_TAG         = uno
 BOARD_TAG         = mega2560
 #BOARD_SUB         = atmega2560
 
@@ -31,7 +32,8 @@ MONITOR_PORT      = /dev/ttyACM*
 
 ### MONITOR_BAUDRATE
 MONITOR_BAUDRATE  = 115200
-MONITOR_CMD = minicom -C log.txt -D
+#MONITOR_CMD = minicom -C log.txt -D
+MONITOR_CMD = minicom -D
 
 
 ### AVR_TOOLS_DIR
