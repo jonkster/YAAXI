@@ -52,11 +52,6 @@
  *   void boxSetup(void)		where you set up arduino pins,
  *   					initialise displays, hardware etc
  *
- *   void clearChanges(void) 		called after "sendAnyChanges" - use it
- *					if you need to remove any flags that
- *					you use to say changes need to be sent
- *   					to XPlane
- *
  *   void setStartState(void);		use if you want to set anything up once
  *					communication between the box and
  *					XPlane is made.  (eg you may display
@@ -73,11 +68,6 @@
  *					show diagnostic messages, flash warning
  *					lights etc)
  *
- *   bool sendAnyChanges(void);		where you check if anything has changed
- *					on the device (eg a switch was pushed)
- *					and if so, send an appropriate
- *					message(s) to XPlane,
- *
  *   void setControl(char* device, char* value); set something on the arduino
  *					in response to a message from XPlane,
  *					(eg turn on a LED, display a value, run
@@ -90,10 +80,8 @@
  * */
 
 void boxSetup(void);
-void clearChanges(void);
 void setStartState(void);
 void noConnectionActions(void);
-bool sendAnyChanges(void);
 void setControl(char* device, char* value);
 void boxMainLoop(void);
 

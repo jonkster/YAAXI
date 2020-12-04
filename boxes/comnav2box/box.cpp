@@ -8,10 +8,12 @@
 #define FF_SWITCH_PUSH 24
 #define FF_SWITCH_LO   25
 
+// LCD backlight and contrast pins
 #define POS_BL 2
 #define CONTRAST_0 3
 #define CONTRAST_1 4
 
+// Other LCD pins
 #define POS_LCD_0 39
 #define RS_0  41
 #define RW_0  42
@@ -30,15 +32,12 @@
 #define D6_1  36
 #define D7_1  37
 
-// display contrast/brightness
+// display contrast/brightness values
 #define CONTRASTV_0 30
 #define CONTRASTV_1 80
 #define BL 180
 
 #define ACTIVE_CHAR 0x7f
-//#define ACTIVE_CHAR 0xff
-
-
 
 LiquidCrystal lcd0(RS_0, RW_0, EN_0, D4_0, D5_0, D6_0, D7_0);
 LiquidCrystal lcd1(RS_1, RW_1, EN_1, D4_1, D5_1, D6_1, D7_1);
@@ -55,22 +54,12 @@ struct tBoxState {
 	int activeDisplay;
 };
 struct tBoxState currentState;
-struct tBoxState prevState;
 
 
 void testScreens(void);
 void showNetworkInfo(void);
 
-unsigned long adjustFreq(unsigned long v, unsigned long min, unsigned long max) {
-	if (v > max) {
-		v = min;
-	}
-	else if (v < min)  {
-		v = max;
-	}
-	return v;
-}
-
+/* show a marker on the line corresponding to the currently adjustable radio */
 void markActiveRadio() {
 	lcd0.setCursor(15, 0);
 	lcd0.print(" ");
@@ -102,50 +91,40 @@ void markActiveRadio() {
 }
 
 void flipFrequencies() {
-	unsigned long tmp;
 	switch(currentState.activeDisplay) {
 		case 0:
-			tmp = currentState.c1Stb;
-			currentState.c1Stb = currentState.c1Use;
-			currentState.c1Use = tmp;
-			sendMessage("FLIP_COM1\n");
+			sendMessage("FLIP_COM1:1");
 			break;
 		case 1:
-			tmp = currentState.c2Stb;
-			currentState.c2Stb = currentState.c2Use;
-			currentState.c2Use = tmp;
-			sendMessage("FLIP_COM2\n");
+			sendMessage("FLIP_COM2:1");
 			break;
 		case 2:
-			tmp = currentState.n1Stb;
-			currentState.n1Stb = currentState.n1Use;
-			currentState.n1Use = tmp;
-			sendMessage("FLIP_NAV1\n");
+			sendMessage("FLIP_NAV1:1");
 			break;
 		case 3:
 		default:
-			tmp = currentState.n2Stb;
-			currentState.n2Stb = currentState.n2Use;
-			currentState.n2Use = tmp;
-			sendMessage("FLIP_NAV2\n");
+			sendMessage("FLIP_NAV2:1");
 			break;
 	}
 }
 
 
+
+/* record if flipflop button pushed and set up a delay in re-checking to avoid
+ * bounce */
 int flipFlopDelay = 0;
 bool flipFlopPushed() {
-	if (flipFlopDelay == 0) {
-		bool pushed = (! digitalRead(FF_SWITCH_PUSH));
+	bool pushed = false;
+	if (flipFlopDelay <= 0) {
+		pushed = (! digitalRead(FF_SWITCH_PUSH));
 		if (pushed) {
-			flipFlopDelay = 25;	
+			flipFlopDelay = 20;	
 		}
-		return pushed;
 	}
 	else {
 		flipFlopDelay--;
-		return false;
 	}
+	return pushed;
 }
 
 void setStartState(void) {
@@ -257,19 +236,6 @@ void testScreens() {
 	lcd1.noCursor();
 }
 
-void normaliseFreqs() {
-	// adjust freqs to fit spectrum
-	currentState.c1Use = adjustFreq(currentState.c1Use, 11800, 13695);
-	currentState.c1Stb = adjustFreq(currentState.c1Stb, 11800, 13695);
-	currentState.c2Use = adjustFreq(currentState.c2Use, 11800, 13695);
-	currentState.c2Stb = adjustFreq(currentState.c2Stb, 11800, 13695);
-	currentState.n1Use = adjustFreq(currentState.n1Use, 10800, 11795);
-	currentState.n1Stb = adjustFreq(currentState.n1Stb, 10800, 11795);
-	currentState.n2Use = adjustFreq(currentState.n2Use, 10800, 11795);
-	currentState.n2Stb = adjustFreq(currentState.n2Stb, 10800, 11795);
-}
-
-
 void noConnectionActions(void) {
 	// display diagnostics while waiting for connection
 	lcd0.setCursor(0, 0);
@@ -286,42 +252,42 @@ void printFreqs() {
 	char buf[15];
 	// c1 use
 	lcd0.setCursor(0, 0);
-	dtostrf((double)(currentState.c1Use)/100, 6, 2, buf);
+	dtostrf((double)(currentState.c1Use)/100, 7, 3, buf);
 	lcd0.print(buf);
 
 	// c1 stdby
 	lcd0.setCursor(8, 0);
-	dtostrf((double)(currentState.c1Stb)/100, 6, 2, buf);
+	dtostrf((double)(currentState.c1Stb)/100, 7, 3, buf);
 	lcd0.print(buf);
 
 	// c2 use
 	lcd0.setCursor(0, 1);
-	dtostrf((double)(currentState.c2Use)/100, 6, 2, buf);
+	dtostrf((double)(currentState.c2Use)/100, 7, 3, buf);
 	lcd0.print(buf);
 
 	// c2 stdby
 	lcd0.setCursor(8, 1);
-	dtostrf((double)(currentState.c2Stb)/100, 6, 2, buf);
+	dtostrf((double)(currentState.c2Stb)/100, 7, 3, buf);
 	lcd0.print(buf);
 
 	// n1 use
 	lcd1.setCursor(0, 0);
-	dtostrf((double)(currentState.n1Use)/100, 6, 2, buf);
+	dtostrf((double)(currentState.n1Use)/100, 7, 3, buf);
 	lcd1.print(buf);
 
 	// n1 stdby
 	lcd1.setCursor(8, 0);
-	dtostrf((double)(currentState.n1Stb)/100, 6, 2, buf);
+	dtostrf((double)(currentState.n1Stb)/100, 7, 3, buf);
 	lcd1.print(buf);
 
 	// n2 use
 	lcd1.setCursor(0, 1);
-	dtostrf((double)(currentState.n2Use)/100, 6, 2, buf);
+	dtostrf((double)(currentState.n2Use)/100, 7, 3, buf);
 	lcd1.print(buf);
 
 	// n2 stdby
 	lcd1.setCursor(8, 1);
-	dtostrf((double)(currentState.n2Stb)/100, 6, 2, buf);
+	dtostrf((double)(currentState.n2Stb)/100, 7, 3, buf);
 	lcd1.print(buf);
 }
 
@@ -366,48 +332,6 @@ void setControl(char* device, char* value) {
 }
 
 
-bool sendAnyChanges() {
-	// send any changes we know about to XPlane
-	bool changes = false;
-	/*if (currentState.c1Use != prevState.c1Use) {
-		sendDataTypeLong("C1U", currentState.c1Use);   
-		changes = true;
-	}
-	if (currentState.c1Stb != prevState.c1Stb) {
-		sendDataTypeLong("C1S", currentState.c1Use);   
-		changes = true;
-	}
-	if (currentState.c2Use != prevState.c2Use) {
-		sendDataTypeLong("C2U", currentState.c1Use);   
-		changes = true;
-	}
-	if (currentState.c2Stb != prevState.c2Stb) {
-		sendDataTypeLong("C2S", currentState.c1Use);   
-		changes = true;
-	}
-	if (currentState.n1Use != prevState.n1Use) {
-		sendDataTypeLong("N1U", currentState.c1Use);   
-		changes = true;
-	}
-	if (currentState.n1Stb != prevState.n1Stb) {
-		sendDataTypeLong("N1S", currentState.c1Use);   
-		changes = true;
-	}
-	if (currentState.n2Use != prevState.n2Use) {
-		sendDataTypeLong("N2U", currentState.c1Use);   
-		changes = true;
-	}
-	if (currentState.n2Stb != prevState.n2Stb) {
-		sendDataTypeLong("N2S", currentState.c1Use);   
-		changes = true;
-	}*/
-	return changes;
-}
-
-void clearChanges(void) {
-	prevState = currentState;
-}
-
 void boxMainLoop(void) {
 		printFreqs();
 		markActiveRadio();
@@ -420,6 +344,9 @@ void boxMainLoop(void) {
 		int incKhz = getEncoderDir(0);
 		int incMhz = getEncoderDir(1);
 		if (incKhz != 0) {
+			if (incKhz == -1) {
+				incKhz = 0;
+			}
 			switch(currentState.activeDisplay) {
 				case 0:
 					sendDataTypeInt("KHZ_KNOB_COM1", incKhz);
@@ -437,6 +364,9 @@ void boxMainLoop(void) {
 			}
 		}
 		if (incMhz != 0) {
+			if (incMhz == -1) {
+				incMhz = 0;
+			}
 			switch(currentState.activeDisplay) {
 				case 0:
 					sendDataTypeInt("MHZ_KNOB_COM1", incMhz);
@@ -453,29 +383,6 @@ void boxMainLoop(void) {
 					break;
 			}
 		}
-		/*if ((incKhz != 0) || (incMhz != 0)) {
-			// make changes to active Unit
-			switch(currentState.activeDisplay) {
-				case 0:
-					currentState.c1Stb -= incKhz * 5;
-					currentState.c1Stb -= incMhz * 100;
-					break;
-				case 1:
-					currentState.c2Stb -= incKhz * 5;
-					currentState.c2Stb -= incMhz * 100;
-					break;
-				case 2:
-					currentState.n1Stb -= incKhz * 5;
-					currentState.n1Stb -= incMhz * 100;
-					break;
-				case 3:
-				default:
-					currentState.n2Stb -= incKhz * 5;
-					currentState.n2Stb -= incMhz * 100;
-					break;
-			}
-		}*/
-		normaliseFreqs();
 
 		if (flipFlopPushed()) {
 			flipFrequencies();

@@ -60,10 +60,6 @@ void loop() {
 	} else {
 		actOnAnyXPMessage();
 		boxMainLoop();
-		if (sendAnyChanges()) {
-			clearChanges();
-		}
-
 	}
 }
 
