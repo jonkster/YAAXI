@@ -38,7 +38,7 @@
 
 #define ARDUINO_WRITE_PORT 8888 // we write to arduino(s) on this port
 #define ARDUINO_READ_PORT 8889 // we listen to arduino(s) on this port
-#define ARDUINO_IP "192.168.0.178"
+//#define ARDUINO_IP "192.168.0.178"
 
 #define CMD_READINI +9999998
 #define CMD_PAUSEPI +9999997
@@ -68,6 +68,8 @@ struct		sockaddr_in talkSockAddr;
 
 float		flightLoopCallback(float, float, int, void*);
 int		initialiseSocket(const char* ip, const int port, int& sock, struct sockaddr_in& server, bool bindToPort);
+void		addLogMessage(std::string, const char*);
+void		addLogMessage(std::string, const int);
 void		addLogMessage(const char*, const char*);
 void		addLogMessageInt(const char* msg, const int extra);
 void		closeSocket(const int);
@@ -271,22 +273,27 @@ void handleBoxChangeMsg(const char* msg) {
 	}
 
 	std::map<std::string, XPLMCommandRef>::iterator v;
-	if (std::stoi(s) == 1) {
-		v = controlConfigCommandOn.find(control);
-		if (v != controlConfigCommandOn.end()) {
-			XPLMCommandOnce(v->second);
-			addLogMessage(control.c_str(), "on");
+	try {
+		if (std::stoi(s) == 1) {
+			v = controlConfigCommandOn.find(control);
+			if (v != controlConfigCommandOn.end()) {
+				XPLMCommandOnce(v->second);
+				addLogMessage(control.c_str(), "on");
+			}
+		} else if (std::stoi(s) == 0) {
+			v = controlConfigCommandOff.find(control);
+			if (v != controlConfigCommandOff.end()) {
+				XPLMCommandOnce(v->second);
+				addLogMessage(control.c_str(), "off");
+			}
+		} else {
+			addLogMessage("got empty value??:", s.c_str());
 		}
-	} else if (std::stoi(s) == 0) {
-		v = controlConfigCommandOff.find(control);
-		if (v != controlConfigCommandOff.end()) {
-			XPLMCommandOnce(v->second);
-			addLogMessage(control.c_str(), "off");
-		}
-	} else {
-		addLogMessage("got empty value??:", s.c_str());
+	} catch(...) {
+			addLogMessage("got non numerical value??:", s.c_str());
 	}
 }
+
 
 
 
@@ -357,6 +364,14 @@ float	flightLoopCallback(
 		sendAnyChangesToBox();
 	}
 	return REFRESH_RATE_SECS; // seconds before next call
+}
+
+void addLogMessage(std::string msg, const char* extra) {
+	addLogMessage(msg.c_str(), extra);
+}
+
+void addLogMessage(std::string msg, const int extra) {
+	addLogMessage(msg.c_str(), extra);
 }
 
 void addLogMessage(const char* msg, const char* extra) {
@@ -588,7 +603,7 @@ std::string getLogicOperator(std::string logicSt) {
 	if ((pos = logicSt.find("?")) != std::string::npos) {
 		return logicSt.substr(0, pos);
 	}
-	return "";
+	return logicSt;
 }
 
 std::string getTrueValue(std::string logicSt) {
@@ -648,6 +663,9 @@ void calculateResponse(std::string boxName, std::string device, std::string oldV
 	std::string opCode = getOpCode(op);
 	std::string trueResponse = getTrueValue(logic);
 	std::string falseResponse = getFalseValue(logic);
+	if (op == "EXACT") {
+		opCode = op;
+	}
 	if (oldValue != currentValue) {
 		if (opCode == "CHG") {
 			sendArduinoBox(boxName, (device + ":" + trueResponse).c_str());
@@ -655,13 +673,15 @@ void calculateResponse(std::string boxName, std::string device, std::string oldV
 			std::map<std::string, int>::iterator iit = dataRefIndex.find(device);
 			if (iit != dataRefIndex.end()) {
 				int index = iit->second;
-				std::string opValue = getOpValue(op);
 				currentValue = getValueByIndex(currentValue, index);
+
+				std::string opValue = getOpValue(op);
 				bool match = false;
 				if (opCode == "EQ") {
 					match = currentValue == opValue;
 				} else if (opCode == "EXACT") {
 					sendArduinoBox(boxName, (device + ":" + currentValue).c_str());
+					return;
 				} else if (opCode == "GT") {
 					match = currentValue > opValue;
 				} else if (opCode == "LT") {
@@ -675,7 +695,6 @@ void calculateResponse(std::string boxName, std::string device, std::string oldV
 					return;
 				}
 				if (match) {
-
 					sendArduinoBox(boxName, (device + ":" + trueResponse).c_str());
 				} else {
 					sendArduinoBox(boxName, (device + ":" + falseResponse).c_str());
