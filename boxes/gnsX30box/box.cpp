@@ -9,12 +9,15 @@
 #define LED1 9
 
 // CONTROL devices
-#define CRSR 28
-#define DTO 29
-#define MENU 30
-#define CLR 31
-#define ENTER 32
-#define PROC 33
+#define CRSR 25
+#define RANGE_OUT 26
+#define RANGE_IN 27
+#define DTO 28
+#define MENU 29
+#define CLR 30
+#define ENTER 31
+#define PROC 32
+#define VNAV 33
 #define FPL 34
 #define MSG 35
 #define OBS 36
@@ -33,6 +36,9 @@ struct tBoxState {
 	bool cdi;
 	bool led0;
 	bool led1;
+	bool vnav;
+	bool rangeOut;
+	bool rangeIn;
 };
 struct tBoxState currentState;
 struct tBoxState prevState;
@@ -49,6 +55,9 @@ void setStartState(void) {
 	currentState.msg = false;
 	currentState.obs = false;
 	currentState.cdi = false;
+	currentState.vnav = false;
+	currentState.rangeOut = false;
+	currentState.rangeIn = false;
 	prevState = currentState;
 	digitalWrite(LED0, 0);
 	digitalWrite(LED1, 1);
@@ -70,6 +79,9 @@ void boxSetup() {
 	pinMode(MSG, INPUT_PULLUP);
 	pinMode(OBS, INPUT_PULLUP);
 	pinMode(CDI, INPUT_PULLUP);
+	pinMode(VNAV, INPUT_PULLUP);
+	pinMode(RANGE_OUT, INPUT_PULLUP);
+	pinMode(RANGE_IN, INPUT_PULLUP);
 	setupEncoders();
 }
 
@@ -92,71 +104,123 @@ void setControl(char* device, char* value) {
 	}
 }
 
+int bouncer = 0;
+void markStart(int delayTime) {
+	bouncer = delayTime;
+}
+
 void checkSwitches(void) {
 	if (! digitalRead(CRSR)) {
 		currentState.crsr = true;
+		markStart(10);
 	}
 	if (! digitalRead(DTO)) {
 		currentState.dto = true;
+		markStart(10);
 	}
 	if (! digitalRead(MENU)) {
 		currentState.menu = true;
+		markStart(10);
 	}
 	if (! digitalRead(CLR)) {
 		currentState.clr = true;
+		markStart(10);
 	}
 	if (! digitalRead(ENTER)) {
 		currentState.enter = true;
+		markStart(10);
 	}
 	if (! digitalRead(PROC)) {
 		currentState.proc = true;
+		markStart(10);
 	}
 	if (! digitalRead(FPL)) {
 		currentState.fpl = true;
+		markStart(10);
 	}
 	if (! digitalRead(MSG)) {
 		currentState.msg = true;
+		markStart(10);
 	}
 	if (! digitalRead(OBS)) {
 		currentState.obs = true;
+		markStart(10);
 	}
 	if (! digitalRead(CDI)) {
 		currentState.cdi = true;
+		markStart(10);
+	}
+	if (! digitalRead(VNAV)) {
+		currentState.vnav = true;
+		markStart(10);
+	}
+	if (! digitalRead(RANGE_OUT)) {
+		currentState.rangeOut = true;
+		markStart(10);
+	}
+	if (! digitalRead(RANGE_IN)) {
+		currentState.rangeIn = true;
+		markStart(10);
 	}
 }
 
 void sendChanges() {
-	if ((currentState.crsr != prevState.crsr) && (currentState.crsr)) {
-		sendMessage("CRSR:1");
+	if (bouncer-- <= 0) {
+		bouncer = 0;
+		if ((currentState.crsr != prevState.crsr) && (currentState.crsr)) {
+			sendMessage("CRSR:1");
+			currentState.crsr = false;
+		}
+		if ((currentState.dto != prevState.dto) && (currentState.dto)) {
+			sendMessage("DTO:1");
+			currentState.dto = false;
+		}
+		if ((currentState.menu != prevState.menu) && (currentState.menu)) {
+			sendMessage("MENU:1");
+			currentState.menu = false;
+		}
+		if ((currentState.clr != prevState.clr) && (currentState.clr)) {
+			sendMessage("CLR:1");
+			currentState.clr = false;
+		}
+		if ((currentState.enter != prevState.enter) && (currentState.enter)) {
+			sendMessage("ENTER:1");
+			currentState.enter = false;
+		}
+		if ((currentState.proc != prevState.proc) && (currentState.proc)) {
+			sendMessage("PROC:1");
+			currentState.proc = false;
+		}
+		if ((currentState.fpl != prevState.fpl) && (currentState.fpl)) {
+			sendMessage("FPL:1");
+			currentState.fpl = false;
+		}
+		if ((currentState.msg != prevState.msg) && (currentState.msg)) {
+			sendMessage("MSG:1");
+			currentState.msg = false;
+		}
+		if ((currentState.obs != prevState.obs) && (currentState.obs)) {
+			sendMessage("OBS:1");
+			currentState.obs = false;
+		}
+		if ((currentState.cdi != prevState.cdi) && (currentState.cdi)) {
+			sendMessage("CDI:1");
+			currentState.cdi = false;
+		}
+		if ((currentState.vnav != prevState.vnav) && (currentState.vnav)) {
+			sendMessage("VNAV:1");
+			currentState.vnav = false;
+		}
+		if ((currentState.rangeOut != prevState.rangeOut) && (currentState.rangeOut)) {
+			sendMessage("RANGEOUT:1");
+			currentState.rangeOut = false;
+		}
+		if ((currentState.rangeIn != prevState.rangeIn) && (currentState.rangeIn)) {
+			sendMessage("RANGEIN:1");
+			currentState.rangeIn = false;
+		}
+		prevState = currentState;
 	}
-	if ((currentState.dto != prevState.dto) && (currentState.dto)) {
-		sendMessage("DTO:1");
-	}
-	if ((currentState.menu != prevState.menu) && (currentState.menu)) {
-		sendMessage("MENU:1");
-	}
-	if ((currentState.clr != prevState.clr) && (currentState.clr)) {
-		sendMessage("CLR:1");
-	}
-	if ((currentState.enter != prevState.enter) && (currentState.enter)) {
-		sendMessage("ENTER:1");
-	}
-	if ((currentState.proc != prevState.proc) && (currentState.proc)) {
-		sendMessage("PROC:1");
-	}
-	if ((currentState.fpl != prevState.fpl) && (currentState.fpl)) {
-		sendMessage("FPL:1");
-	}
-	if ((currentState.msg != prevState.msg) && (currentState.msg)) {
-		sendMessage("MSG:1");
-	}
-	if ((currentState.obs != prevState.obs) && (currentState.obs)) {
-		sendMessage("OBS:1");
-	}
-	if ((currentState.cdi != prevState.cdi) && (currentState.cdi)) {
-		sendMessage("CDI:1");
-	}
-	prevState = currentState;
 }
 
 void boxMainLoop(void) {
