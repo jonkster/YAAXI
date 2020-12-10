@@ -8,7 +8,7 @@
 
 #define MSG_BOX_FISH "Avduino Box Fish"
 
-#define DEBUG_MODE true
+#define DEBUG_MODE false
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +34,7 @@ extern "C" {
 
 	void sendMessage(const char* msg);
 
-	void setupEthernet(byte *mac, IPAddress ipa, IPAddress bCast, const char* bid, const char* bDefs);
+	void setupEthernet(byte *mac, IPAddress ipa, byte *gw, byte* mask, IPAddress bCast, const char* bid, const char* bDefs);
 
 #ifdef __cplusplus
 }

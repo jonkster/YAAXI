@@ -29,11 +29,13 @@ bool foundXP = false;
 bool verbose = DEBUG_MODE;
 
 
-void setupEthernet(byte *mac, IPAddress ipa, IPAddress bCast, const char* bid, const char* bDefs) {
-	Ethernet.begin(mac, ipa);
+void setupEthernet(byte *mac, IPAddress ipa, byte *gw, byte* mask, IPAddress bCast, const char* bid, const char* bDefs) {
+
+	Ethernet.begin(mac, ipa, gw, mask);
+	Udp.begin(boxPort);
+
 	ip = ipa;
 	xpip = bCast;
-	Udp.begin(boxPort);
 	memset(xpData, 0, sizeof(xpData));
 
 	boxId = (char*)malloc(strlen(bid)+1);
@@ -115,6 +117,7 @@ bool getMessage(char* buf) {
 	while (packetSize > 0) {
 		char packetBuffer[UDP_TX_PACKET_MAX_SIZE];
 		memset(packetBuffer, 0, sizeof(packetBuffer));
+
 		Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
 		strncat(xpData, packetBuffer, packetSize);
 
