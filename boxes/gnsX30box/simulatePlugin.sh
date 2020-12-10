@@ -9,12 +9,12 @@ BOXMSG=`nc -4u -l -w1 192.168.0.255 8889`
 
 if grep -q "XP Plugin Fish:" <<< "$BOXMSG"
 then
-	echo "I received '" $BOXMSG "'"
+	echo "I received '$BOXMSG'"
 	IFS=':' read -a arr <<< ${BOXMSG}
 	IP_ARD=${arr[1]}
-	echo "found arduino with IP "  "'${IP_ARD}'"
+	echo "found arduino with IP '${IP_ARD}'"
 	./box.sh ${IP_ARD}
 else
-	echo "could not find box :( - I received '" $BOXMSG "'"
+	echo "could not find box :(    I received '$BOXMSG'"
 fi
 
