@@ -116,58 +116,19 @@ void markStart(int delayTime) {
 }
 
 void checkSwitches(void) {
-	if (! digitalRead(CRSR)) {
-		currentState.crsr = true;
-		markStart(10);
-	}
-	if (! digitalRead(DTO)) {
-		currentState.dto = true;
-		markStart(10);
-	}
-	if (! digitalRead(MENU)) {
-		currentState.menu = true;
-		markStart(10);
-	}
-	if (! digitalRead(CLR)) {
-		currentState.clr = true;
-		markStart(10);
-	}
-	if (! digitalRead(ENTER)) {
-		currentState.enter = true;
-		markStart(10);
-	}
-	if (! digitalRead(PROC)) {
-		currentState.proc = true;
-		markStart(10);
-	}
-	if (! digitalRead(FPL)) {
-		currentState.fpl = true;
-		markStart(10);
-	}
-	if (! digitalRead(MSG)) {
-		currentState.msg = true;
-		markStart(10);
-	}
-	if (! digitalRead(OBS)) {
-		currentState.obs = true;
-		markStart(10);
-	}
-	if (! digitalRead(CDI)) {
-		currentState.cdi = true;
-		markStart(10);
-	}
-	if (! digitalRead(VNAV)) {
-		currentState.vnav = true;
-		markStart(10);
-	}
-	if (! digitalRead(RANGE_OUT)) {
-		currentState.rangeOut = true;
-		markStart(10);
-	}
-	if (! digitalRead(RANGE_IN)) {
-		currentState.rangeIn = true;
-		markStart(10);
-	}
+	currentState.crsr = digitalRead(CRSR);
+	currentState.dto = digitalRead(DTO);
+	currentState.menu = digitalRead(MENU);
+	currentState.clr = digitalRead(CLR);
+	currentState.enter = digitalRead(ENTER);
+	currentState.proc = digitalRead(PROC);
+	currentState.fpl = digitalRead(FPL);
+	currentState.msg = digitalRead(MSG);
+	currentState.obs = digitalRead(OBS);
+	currentState.cdi = digitalRead(CDI);
+	currentState.vnav = digitalRead(VNAV);
+	currentState.rangeOut = digitalRead(RANGE_OUT);
+	currentState.rangeIn = digitalRead(RANGE_IN);
 }
 
 void sendChanges() {
@@ -175,42 +136,55 @@ void sendChanges() {
 		bouncer = 0;
 		if (currentState.crsr != prevState.crsr) {
 			sendDataTypeBool("CRSR", currentState.crsr);
+			markStart(10);
 		}
 		if (currentState.dto != prevState.dto) {
 			sendDataTypeBool("DTO", currentState.dto);
+			markStart(10);
 		}
 		if (currentState.menu != prevState.menu) {
 			sendDataTypeBool("MENU", currentState.menu);
+			markStart(10);
 		}
 		if (currentState.clr != prevState.clr) {
 			sendDataTypeBool("CLR", currentState.clr);
+			markStart(10);
 		}
 		if (currentState.enter != prevState.enter) {
 			sendDataTypeBool("ENTER", currentState.enter);
+			markStart(10);
 		}
 		if (currentState.proc != prevState.proc) {
 			sendDataTypeBool("PROC", currentState.proc);
+			markStart(10);
 		}
 		if (currentState.fpl != prevState.fpl) {
 			sendDataTypeBool("FPL", currentState.fpl);
+			markStart(10);
 		}
 		if (currentState.msg != prevState.msg) {
 			sendDataTypeBool("MSG", currentState.msg);
+			markStart(10);
 		}
 		if (currentState.obs != prevState.obs) {
 			sendDataTypeBool("OBS", currentState.obs);
+			markStart(10);
 		}
 		if (currentState.cdi != prevState.cdi) {
 			sendDataTypeBool("CDI", currentState.cdi);
+			markStart(10);
 		}
 		if (currentState.vnav != prevState.vnav) {
 			sendDataTypeBool("VNAV", currentState.vnav);
+			markStart(10);
 		}
 		if (currentState.rangeOut != prevState.rangeOut) {
 			sendDataTypeBool("RANGEOUT", currentState.rangeOut);
+			markStart(10);
 		}
 		if (currentState.rangeIn != prevState.rangeIn) {
 			sendDataTypeBool("RANGEIN", currentState.rangeIn);
+			markStart(10);
 		}
 		prevState = currentState;
 	} else {
