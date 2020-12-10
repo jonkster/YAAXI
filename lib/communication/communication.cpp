@@ -43,6 +43,12 @@ void setupEthernet(byte *mac, IPAddress ipa, IPAddress bCast, const char* bid, c
 	strcpy(boxDefs, bDefs);
 }
 
+void sendDataTypeBool(const char* code, bool data ) {
+	char msg[48];
+	snprintf(msg, sizeof(msg), "%s:%i\n", code, data);
+	sendMessage(msg);
+}
+
 void sendDataTypeInt(const char* code, int data ) {
 	char msg[48];
 	snprintf(msg, sizeof(msg), "%s:%i\n", code, data);

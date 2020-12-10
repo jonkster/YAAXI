@@ -92,6 +92,12 @@ void noConnectionActions(void) {
 	fishForPlugin();
 	digitalWrite(LED0, 1);
 	digitalWrite(LED1, 0);
+	delay(500);
+	digitalWrite(LED0, 1);
+	digitalWrite(LED1, 1);
+	delay(500);
+	digitalWrite(LED0, 0);
+	digitalWrite(LED1, 0);
 }
 
 void setControl(char* device, char* value) {
@@ -167,59 +173,47 @@ void checkSwitches(void) {
 void sendChanges() {
 	if (bouncer-- <= 0) {
 		bouncer = 0;
-		if ((currentState.crsr != prevState.crsr) && (currentState.crsr)) {
-			sendMessage("CRSR:1");
-			currentState.crsr = false;
+		if (currentState.crsr != prevState.crsr) {
+			sendDataTypeBool("CRSR", currentState.crsr);
 		}
-		if ((currentState.dto != prevState.dto) && (currentState.dto)) {
-			sendMessage("DTO:1");
-			currentState.dto = false;
+		if (currentState.dto != prevState.dto) {
+			sendDataTypeBool("DTO", currentState.dto);
 		}
-		if ((currentState.menu != prevState.menu) && (currentState.menu)) {
-			sendMessage("MENU:1");
-			currentState.menu = false;
+		if (currentState.menu != prevState.menu) {
+			sendDataTypeBool("MENU", currentState.menu);
 		}
-		if ((currentState.clr != prevState.clr) && (currentState.clr)) {
-			sendMessage("CLR:1");
-			currentState.clr = false;
+		if (currentState.clr != prevState.clr) {
+			sendDataTypeBool("CLR", currentState.clr);
 		}
-		if ((currentState.enter != prevState.enter) && (currentState.enter)) {
-			sendMessage("ENTER:1");
-			currentState.enter = false;
+		if (currentState.enter != prevState.enter) {
+			sendDataTypeBool("ENTER", currentState.enter);
 		}
-		if ((currentState.proc != prevState.proc) && (currentState.proc)) {
-			sendMessage("PROC:1");
-			currentState.proc = false;
+		if (currentState.proc != prevState.proc) {
+			sendDataTypeBool("PROC", currentState.proc);
 		}
-		if ((currentState.fpl != prevState.fpl) && (currentState.fpl)) {
-			sendMessage("FPL:1");
-			currentState.fpl = false;
+		if (currentState.fpl != prevState.fpl) {
+			sendDataTypeBool("FPL", currentState.fpl);
 		}
-		if ((currentState.msg != prevState.msg) && (currentState.msg)) {
-			sendMessage("MSG:1");
-			currentState.msg = false;
+		if (currentState.msg != prevState.msg) {
+			sendDataTypeBool("MSG", currentState.msg);
 		}
-		if ((currentState.obs != prevState.obs) && (currentState.obs)) {
-			sendMessage("OBS:1");
-			currentState.obs = false;
+		if (currentState.obs != prevState.obs) {
+			sendDataTypeBool("OBS", currentState.obs);
 		}
-		if ((currentState.cdi != prevState.cdi) && (currentState.cdi)) {
-			sendMessage("CDI:1");
-			currentState.cdi = false;
+		if (currentState.cdi != prevState.cdi) {
+			sendDataTypeBool("CDI", currentState.cdi);
 		}
-		if ((currentState.vnav != prevState.vnav) && (currentState.vnav)) {
-			sendMessage("VNAV:1");
-			currentState.vnav = false;
+		if (currentState.vnav != prevState.vnav) {
+			sendDataTypeBool("VNAV", currentState.vnav);
 		}
-		if ((currentState.rangeOut != prevState.rangeOut) && (currentState.rangeOut)) {
-			sendMessage("RANGEOUT:1");
-			currentState.rangeOut = false;
+		if (currentState.rangeOut != prevState.rangeOut) {
+			sendDataTypeBool("RANGEOUT", currentState.rangeOut);
 		}
-		if ((currentState.rangeIn != prevState.rangeIn) && (currentState.rangeIn)) {
-			sendMessage("RANGEIN:1");
-			currentState.rangeIn = false;
+		if (currentState.rangeIn != prevState.rangeIn) {
+			sendDataTypeBool("RANGEIN", currentState.rangeIn);
 		}
 		prevState = currentState;
+	} else {
 	}
 }
 

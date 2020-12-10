@@ -11,14 +11,14 @@ else
 	nc -4u -l -w1  8889
 	echo
 	echo "sending ${1} control messages - LED should flash every second, several times..."
-	for in in {1..5}
+	for in in {1..3}
 	do
 		echo -n "LED0:1" | nc -4u -w0 $1 8888
 		echo -n "LED1:1" | nc -4u -w0 $1 8888
-		sleep 1 
+		sleep 0.5 
 		echo -n "LED0:0" | nc -4u -w0 $1 8888
 		echo -n "LED1:0" | nc -4u -w0 $1 8888
-		sleep 1
+		sleep 0.5
 		echo "(check LED turned on and off...)"
 	done
 	sleep 3
