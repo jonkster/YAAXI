@@ -88,16 +88,17 @@ void boxSetup() {
 void noConnectionActions(void) {
 	digitalWrite(LED0, 0);
 	digitalWrite(LED1, 1);
-	delay(500);
+	delay(100);
 	fishForPlugin();
 	digitalWrite(LED0, 1);
 	digitalWrite(LED1, 0);
-	delay(500);
+	delay(100);
 	digitalWrite(LED0, 1);
 	digitalWrite(LED1, 1);
-	delay(500);
+	delay(100);
 	digitalWrite(LED0, 0);
 	digitalWrite(LED1, 0);
+	delay(100);
 }
 
 void setControl(char* device, char* value) {
@@ -135,55 +136,55 @@ void sendChanges() {
 	if (bouncer-- <= 0) {
 		bouncer = 0;
 		if (currentState.crsr != prevState.crsr) {
-			sendDataTypeBool("CRSR", currentState.crsr);
+			sendDataTypeBool("CRSR", !currentState.crsr);
 			markStart(10);
 		}
 		if (currentState.dto != prevState.dto) {
-			sendDataTypeBool("DTO", currentState.dto);
+			sendDataTypeBool("DTO", !currentState.dto);
 			markStart(10);
 		}
 		if (currentState.menu != prevState.menu) {
-			sendDataTypeBool("MENU", currentState.menu);
+			sendDataTypeBool("MENU", !currentState.menu);
 			markStart(10);
 		}
 		if (currentState.clr != prevState.clr) {
-			sendDataTypeBool("CLR", currentState.clr);
+			sendDataTypeBool("CLR", !currentState.clr);
 			markStart(10);
 		}
 		if (currentState.enter != prevState.enter) {
-			sendDataTypeBool("ENTER", currentState.enter);
+			sendDataTypeBool("ENTER", !currentState.enter);
 			markStart(10);
 		}
 		if (currentState.proc != prevState.proc) {
-			sendDataTypeBool("PROC", currentState.proc);
+			sendDataTypeBool("PROC", !currentState.proc);
 			markStart(10);
 		}
 		if (currentState.fpl != prevState.fpl) {
-			sendDataTypeBool("FPL", currentState.fpl);
+			sendDataTypeBool("FPL", !currentState.fpl);
 			markStart(10);
 		}
 		if (currentState.msg != prevState.msg) {
-			sendDataTypeBool("MSG", currentState.msg);
+			sendDataTypeBool("MSG", !currentState.msg);
 			markStart(10);
 		}
 		if (currentState.obs != prevState.obs) {
-			sendDataTypeBool("OBS", currentState.obs);
+			sendDataTypeBool("OBS", !currentState.obs);
 			markStart(10);
 		}
 		if (currentState.cdi != prevState.cdi) {
-			sendDataTypeBool("CDI", currentState.cdi);
+			sendDataTypeBool("CDI", !currentState.cdi);
 			markStart(10);
 		}
 		if (currentState.vnav != prevState.vnav) {
-			sendDataTypeBool("VNAV", currentState.vnav);
+			sendDataTypeBool("VNAV", !currentState.vnav);
 			markStart(10);
 		}
 		if (currentState.rangeOut != prevState.rangeOut) {
-			sendDataTypeBool("RANGEOUT", currentState.rangeOut);
+			sendDataTypeBool("RANGEOUT", !currentState.rangeOut);
 			markStart(10);
 		}
 		if (currentState.rangeIn != prevState.rangeIn) {
-			sendDataTypeBool("RANGEIN", currentState.rangeIn);
+			sendDataTypeBool("RANGEIN", !currentState.rangeIn);
 			markStart(10);
 		}
 		prevState = currentState;

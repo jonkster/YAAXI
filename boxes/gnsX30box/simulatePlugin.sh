@@ -5,7 +5,7 @@
 
 echo "I am simulating XPlane and the Avduino plugin"
 echo "listening for an Avduino Box..."
-BOXMSG=`nc -4u -l -w1 192.168.0.255 8889`
+BOXMSG=`nc -4u -l -w1 8889`
 
 if grep -q "XP Plugin Fish:" <<< "$BOXMSG"
 then
