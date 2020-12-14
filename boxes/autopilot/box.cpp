@@ -8,19 +8,20 @@
 
 // PIN ASSIGNMENTS
 // DISPLAY devices
-#define LED0 8
-#define LED1 9
 
 // CONTROL devices
-#define AP   25
-#define FD   26
-#define HDG  27
-#define ALT  28
-#define NAV  29
-#define APR  30
-#define VS   31
-#define UP   32
-#define DOWN 33
+#define AP   42
+#define FD   41
+#define HDG  40
+#define ALT  39
+#define NAV  38
+#define APR  37
+#define VS   36
+#define UP   35
+#define DOWN 34
+#define OBS_PUSH 43
+#define HDG_PUSH 44
+#define ALT_PUSH 45
 
 # define CLK 10  // E
 # define DATA 9 // R/W
@@ -37,7 +38,11 @@ struct tBoxState {
 	bool vs;
 	bool up;
 	bool down;
+	bool obs_push;
+	bool hdg_push;
+	bool alt_push;
 	int  selAlt;
+	int  selVs;
 };
 struct tBoxState currentState;
 struct tBoxState prevState;
@@ -45,10 +50,49 @@ struct tBoxState prevState;
 void showAnnunciators() {
 	u8g2.clearBuffer();
 	u8g2.setFont(u8g2_font_unifont_tf);
-	u8g2.drawStr(0,12,"AP  FD  HDG");
+	if (currentState.ap || currentState.fd) {
+		if (currentState.ap) {
+			u8g2.drawStr(12,24,"AP");
+		}
+		if (currentState.fd) {
+			u8g2.drawStr(48,24,"FD");
+		}
+
+		// roll modes
+		// either hdg, roll, nav or apr
+		if (currentState.hdg) {
+			u8g2.drawStr(0,12,"HDG");
+		} else if (currentState.apr) {
+			u8g2.drawStr(0,12,"APR");
+		} else if (currentState.nav) {
+			u8g2.drawStr(0,12,"NAV");
+		} else {
+			u8g2.drawStr(0,12,"ROLL");
+		}
+
+		// pitch modes
+		// either alt, vs or pitch
+		if (currentState.alt) {
+			u8g2.drawStr(0,36,"ALT");
+		} else if (currentState.vs) {
+			u8g2.setCursor(0,36);
+			u8g2.print("VS ");
+			u8g2.print(currentState.selVs);
+			u8g2.print(" fpm");
+		} else {
+			u8g2.drawStr(0,36,"PITCH");
+		}
+	}
+	if (currentState.selAlt > 0) {
+		u8g2.setCursor(0,64);
+		u8g2.print("alt ");
+		u8g2.print(currentState.selAlt);
+		u8g2.print(" feet");
+	}
+	/*u8g2.drawStr(0,12,"AP  FD  HDG");
 	u8g2.drawStr(0,24,"ALT NAV  APR");
 	u8g2.drawStr(0,36,"VS 500fpm");
-	u8g2.drawStr(0,48,"alt 12000 armed");
+	u8g2.drawStr(0,48,"alt 12000 armed");*/
 	u8g2.sendBuffer();
 }
 
@@ -63,10 +107,12 @@ void setStartState(void) {
 	currentState.vs = false;
 	currentState.up = false;
 	currentState.down = false;
-	currentState.selAlt = 0;
+	currentState.hdg_push = false;
+	currentState.obs_push = false;
+	currentState.alt_push = false;
+	currentState.selAlt = 1800;
+	currentState.selVs = 600;
 	prevState = currentState;
-	digitalWrite(LED0, 0);
-	digitalWrite(LED1, 1);
 
 	u8g2.clearBuffer();
 	u8g2.setFont(u8g2_font_courB08_tr);
@@ -111,11 +157,6 @@ void testScreens() {
 }
 
 void boxSetup() {
-	pinMode(LED0, OUTPUT);
-	pinMode(LED1, OUTPUT);
-	digitalWrite(LED0, 1);
-	digitalWrite(LED1, 1);
-
 	pinMode(AP, INPUT_PULLUP);
 	pinMode(FD, INPUT_PULLUP);
 	pinMode(HDG, INPUT_PULLUP);
@@ -125,6 +166,9 @@ void boxSetup() {
 	pinMode(VS, INPUT_PULLUP);
 	pinMode(UP, INPUT_PULLUP);
 	pinMode(DOWN, INPUT_PULLUP);
+	pinMode(OBS_PUSH, INPUT_PULLUP);
+	pinMode(HDG_PUSH, INPUT_PULLUP);
+	pinMode(ALT_PUSH, INPUT_PULLUP);
 	setupEncoders();
 
 	u8g2.begin();
@@ -164,11 +208,27 @@ void noConnectionActions(void) {
 void setControl(char* device, char* value) {
 	// act on message from XPlane by setting our systems state
 	unsigned int v = atoi(value);
-	if (strcmp("LED0", device) == 0) {
-		digitalWrite(LED0, v);	
-	} else if (strcmp("LED1", device) == 0) {
-		digitalWrite(LED1, v);	
-	}
+	if (strcmp("AP_MODE", device) == 0) {
+		currentState.ap = (v == 1);
+	} 
+       	if (strcmp("FD_MODE", device) == 0) {
+		currentState.fd = (v == 1);
+	} 
+       	if (strcmp("HDG_MODE", device) == 0) {
+		currentState.hdg = (v == 1);
+	} 
+       	if (strcmp("ALT_MODE", device) == 0) {
+		currentState.alt = (v == 1);
+	} 
+       	if (strcmp("NAV_MODE", device) == 0) {
+		currentState.nav = (v == 1);
+	} 
+       	if (strcmp("APR_MODE", device) == 0) {
+		currentState.apr = (v == 1);
+	} 
+       	if (strcmp("VS_MODE", device) == 0) {
+		currentState.vs = (v == 1);
+	} 
 }
 
 int bouncer = 0;
@@ -177,64 +237,59 @@ void markStart(int delayTime) {
 }
 
 void checkSwitches(void) {
-	currentState.ap = digitalRead(AP);
-	currentState.fd = digitalRead(FD);
-	currentState.hdg = digitalRead(HDG);
-	currentState.alt = digitalRead(ALT);
-	currentState.nav = digitalRead(NAV);
-	currentState.apr = digitalRead(APR);
-	currentState.vs = digitalRead(VS);
-	currentState.up = digitalRead(UP);
-	currentState.down = digitalRead(DOWN);
 }
 
 void sendChanges() {
 	if (bouncer-- <= 0) {
 		bouncer = 0;
-		if (currentState.ap != prevState.ap) {
-			sendDataTypeBool("AP_ON", !currentState.ap);
+		if (!digitalRead(AP)) {
+			sendDataTypeBool("AP_TOGGLE", 1);
 			markStart(10);
 		}
-		if (currentState.fd != prevState.fd) {
-			sendDataTypeBool("FD_ON", !currentState.fd);
+		if (!digitalRead(FD)) {
+			sendDataTypeBool("FD_TOGGLE", 1);
 			markStart(10);
 		}
-		if (currentState.hdg != prevState.hdg) {
-			sendDataTypeBool("AP_HDG", !currentState.hdg);
+		if (!digitalRead(HDG)) {
+			sendDataTypeBool("HDG_TOGGLE", 1);
 			markStart(10);
 		}
-		if (currentState.alt != prevState.alt) {
-			sendDataTypeBool("AP_ALT", !currentState.alt);
+		if (!digitalRead(ALT)) {
+			sendDataTypeBool("ALT_TOGGLE", 1);
 			markStart(10);
 		}
-		if (currentState.nav != prevState.nav) {
-			sendDataTypeBool("AP_NAV", !currentState.nav);
+		if (!digitalRead(NAV)) {
+			sendDataTypeBool("NAV_TOGGLE", 1);
 			markStart(10);
 		}
-		if (currentState.apr != prevState.apr) {
-			sendDataTypeBool("AP_APR", !currentState.apr);
+		if (!digitalRead(APR)) {
+			sendDataTypeBool("APR_TOGGLE", 1);
 			markStart(10);
 		}
-		if (currentState.vs != prevState.vs) {
-			sendDataTypeBool("AP_VS", !currentState.vs);
+		if (!digitalRead(VS)) {
+			sendDataTypeBool("VS_TOGGLE", 1);
 			markStart(10);
 		}
-		if (currentState.up != prevState.up) {
-			sendDataTypeBool("AP_UP", !currentState.up);
+		if (!digitalRead(UP)) {
+			sendDataTypeBool("UP_TOGGLE", 1);
 			markStart(10);
 		}
-		if (currentState.down != prevState.down) {
-			sendDataTypeBool("AP_DOWN", !currentState.down);
+		if (!digitalRead(DOWN)) {
+			sendDataTypeBool("DOWN_TOGGLE", 1);
 			markStart(10);
 		}
-		if (bouncer != 0) {
-			u8g2.setCursor(0, 15);
-			u8g2.print("PRESSED!");
-		} else {
-			u8g2.setCursor(0, 15);
-			u8g2.print("        ");
+		if (!digitalRead(OBS_PUSH)) {
+			sendDataTypeBool("OBS_SYNC_TOGGLE", 1);
+			markStart(10);
 		}
-		prevState = currentState;
+		if (!digitalRead(HDG_PUSH)) {
+			sendDataTypeBool("HDG_SYNC_TOGGLE", 1);
+			markStart(10);
+		}
+		if (!digitalRead(ALT_PUSH)) {
+			sendDataTypeBool("ALT_SYNC_TOGGLE", 1);
+			markStart(10);
+		}
 	} else {
 	}
 }
@@ -244,16 +299,31 @@ void boxMainLoop(void) {
 	sendChanges();
 	int crs = getEncoderDir(0);
 	int hdg = getEncoderDir(1);
+	int altThousands = getEncoderDir(2);
+	int altHundreds = getEncoderDir(3);
 	if (crs != 0) {
 		if (crs == -1) {
 			crs = 0;
 		}
 		sendDataTypeInt("CRS_KNOB", crs);
-	} else if (hdg != 0) {
+	} 
+	if (hdg != 0) {
 		if (hdg == -1) {
 			hdg = 0;
 		}
 		sendDataTypeInt("HDG_KNOB", hdg);
+	} 
+       	if (altThousands != 0) {
+		if (altThousands == -1) {
+			altThousands = 0;
+		}
+		sendDataTypeInt("ALT_TH_KNOB", altThousands);
+	} 
+       	if (altHundreds != 0) {
+		if (altHundreds == -1) {
+			altHundreds = 0;
+		}
+		sendDataTypeInt("ALT_HU_KNOB", altHundreds);
 	}
 	showAnnunciators();
 }
