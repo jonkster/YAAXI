@@ -41,8 +41,9 @@ struct tBoxState {
 	bool obs_push;
 	bool hdg_push;
 	bool alt_push;
-	int  selAlt;
-	int  selVs;
+	int  altSelected;
+	int  vspeedSelected;
+	int  altitude;
 };
 struct tBoxState currentState;
 struct tBoxState prevState;
@@ -52,7 +53,7 @@ void showAnnunciators() {
 	u8g2.setFont(u8g2_font_unifont_tf);
 	if (currentState.ap || currentState.fd) {
 		if (currentState.ap) {
-			u8g2.drawFrame(10, 13, 20, 16);
+			u8g2.drawFrame(10, 14, 20, 18);
 			u8g2.drawStr(13,27,"AP");
 		}
 		if (currentState.fd) {
@@ -74,21 +75,22 @@ void showAnnunciators() {
 		// pitch modes
 		// either alt, vs or pitch
 		if (currentState.alt) {
-			u8g2.drawStr(0,40,"ALT");
+			u8g2.drawStr(0,45,"ALT");
 		} else if (currentState.vs) {
-			u8g2.setCursor(0,40);
+			u8g2.setCursor(0,45);
 			u8g2.print("VS ");
-			u8g2.print(currentState.selVs);
+			u8g2.print(currentState.vspeedSelected);
 			u8g2.print(" fpm");
 		} else {
-			u8g2.drawStr(0,40,"PITCH");
+			u8g2.drawStr(0,45,"PITCH");
 		}
 	}
-	if (currentState.selAlt > 0) {
+	if (currentState.altSelected > 0) {
 		u8g2.setCursor(24,64);
-		u8g2.print(currentState.selAlt);
+		u8g2.print(currentState.altSelected);
 		u8g2.print("'");
 	}
+	u8g2.drawVLine(100, 0, 64);
 	u8g2.sendBuffer();
 }
 
@@ -106,8 +108,9 @@ void setStartState(void) {
 	currentState.hdg_push = false;
 	currentState.obs_push = false;
 	currentState.alt_push = false;
-	currentState.selAlt = 1800;
-	currentState.selVs = 600;
+	currentState.altSelected = 1800;
+	currentState.vspeedSelected = 0;
+	currentState.altitude = 230;
 	prevState = currentState;
 
 	u8g2.clearBuffer();
@@ -225,6 +228,15 @@ void setControl(char* device, char* value) {
        	if (strcmp("VS_MODE", device) == 0) {
 		currentState.vs = (v == 1);
 	} 
+       	if (strcmp("ALT_SEL", device) == 0) {
+		currentState.altSelected = v;
+	} 
+       	if (strcmp("AP_VS", device) == 0) {
+		currentState.vspeedSelected = v;
+	} 
+       	if (strcmp("ALTITUDE", device) == 0) {
+		currentState.altitude = v;
+	} 
 }
 
 int bouncer = 0;
@@ -267,11 +279,11 @@ void sendChanges() {
 			markStart(10);
 		}
 		if (!digitalRead(UP)) {
-			sendDataTypeBool("UP_TOGGLE", 1);
+			sendDataTypeBool("AP_UP", 1);
 			markStart(10);
 		}
 		if (!digitalRead(DOWN)) {
-			sendDataTypeBool("DOWN_TOGGLE", 1);
+			sendDataTypeBool("AP_DN", 1);
 			markStart(10);
 		}
 		if (!digitalRead(OBS_PUSH)) {

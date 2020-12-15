@@ -9,13 +9,22 @@ else
 	echo -n "Avduino Box Fish" | nc -4u -w0 ${1} 8888
 	BOXID=`nc -4u -l -w1 8889`
 	echo "Looking for a BOXID response, got: ${BOXID}"
-
 	if [[ "${BOXID}" == "BOXID"* ]]
 	then
+		ALTITUDE=230
+		ALTSEL=2000
+		VS=500
 		echo "Got valid BOXID."
 		echo "Sending ${1} control messages - AP annunciator should flash several times"
 		for in in {1..3}
 		do
+			echo -n "ALT_SEL:${ALTSEL}" | nc -4u -w0 $1 8888
+			echo -n "AP_VS:${VS}" | nc -4u -w0 $1 8888
+			echo -n "ALTITUDE:${ALTITUDE}" | nc -4u -w0 $1 8888
+			ALTITUDE=$(( $ALTITUDE + 500 ));
+			ALTSEL=$(( $ALTSEL + 1000 ));
+			VS=$(( $VS + 100 ));
+
 			echo -n "AP_MODE:1" | nc -4u -w0 $1 8888
 			echo -n "FD_MODE:1" | nc -4u -w0 $1 8888
 			sleep 0.5
