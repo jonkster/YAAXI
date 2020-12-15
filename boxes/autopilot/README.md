@@ -51,5 +51,41 @@ Typical ini values to add to the X-Plane Arduino plugin ini file
 ----------------------------------------------------------------
 
 ```
+################# AUTOPILOT BOX
+# let's call it BOX2
+A:BOX2:192.168.0.192:
+# Initial values to box
+I:AP_ON:0:BOX2
+I:FD_ON:1:BOX2
 
+# What to do with messages from box
+C:AP_TOGGLE:sim/autopilot/servos_toggle::
+C:FD_TOGGLE:sim/autopilot/fdir_toggle::
+C:HDG_TOGGLE:sim/autopilot/heading::
+C:NAV_TOGGLE:sim/autopilot/NAV::
+C:ALT_TOGGLE:sim/autopilot/altitude_hold::
+C:APR_TOGGLE:sim/autopilot/approach::
+C:VS_TOGGLE:sim/autopilot/vertical_speed_pre_sel::
+C:AP_UP:sim/autopilot/vertical_speed_up::
+C:AP_DN:sim/autopilot/vertical_speed_down::
+DR:ALT_ASSIGNED:sim/cockpit/autopilot/altitude:::
+C:ALT_SYNC_TOGGLE:sim/autopilot/altitude_sync:::
+C:HDG_SYNC_TOGGLE:sim/autopilot/heading_sync:::
+C:CRS_KNOB:sim/radios/obs1_up:sim/radios/obs1_down:
+C:HDG_KNOB:sim/autopilot/heading_down:sim/autopilot/heading_up:
+C:ALT_HU_KNOB:sim/autopilot/altitude_down:sim/autopilot/altitude_up:
+#ALT_TH_KNOB
+#OBS_SYNC_TOGGLE
+
+# What to send to box
+D:AP_MODE:sim/cockpit2/annunciators/autopilot::EXACT:BOX2
+D:FD_MODE:sim/cockpit2/annunciators/flight_director::EXACT:BOX2
+D:HDG_MODE:sim/cockpit2/autopilot/heading_mode::EXACT:BOX2
+D:ALT_MODE:sim/cockpit2/autopilot/altitude_mode::EQ 6?1,0:BOX2
+D:NAV_MODE:sim/cockpit2/autopilot/nav_status::EQ 2?1,0:BOX2
+D:VS_MODE:sim/cockpit2/autopilot/vvi_status::EQ 2?1,0:BOX2
+#D:APR_MODE:sim/cockpit2/autopilot/nav_status::EQ 2?1,0:BOX2
+D:ALT_SEL:sim/cockpit/autopilot/altitude::EXACT:BOX2
+D:AP_VS:sim/cockpit/autopilot/vertical_velocity::EXACT:BOX2
+D:ALTITUDE:sim/cockpit2/gauges/indicators/altitude_ft_pilot::EXACTIFDIFFGT 5?,:BOX2
 ```
