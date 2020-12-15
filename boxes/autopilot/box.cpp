@@ -310,28 +310,48 @@ void boxMainLoop(void) {
 	int altThousands = getEncoderDir(2);
 	int altHundreds = getEncoderDir(3);
 	if (crs != 0) {
-		if (crs == -1) {
+		int rep = 5;
+		if (crs < 0) {
 			crs = 0;
+		} else {
+			crs = 1;
 		}
-		sendDataTypeInt("CRS_KNOB", crs);
+		for (int i = 0; i < rep; i++) {
+			sendDataTypeInt("CRS_KNOB", crs);
+		}
 	} 
 	if (hdg != 0) {
-		if (hdg == -1) {
+		int rep = 5;
+		if (hdg < 0) {
 			hdg = 0;
+		} else {
+			hdg = 1;
 		}
-		sendDataTypeInt("HDG_KNOB", hdg);
+		for (int i = 0; i < rep; i++) {
+			sendDataTypeInt("HDG_KNOB", hdg);
+		}
 	} 
        	if (altThousands != 0) {
-		if (altThousands == -1) {
+		int rep = 5;
+		if (altThousands < 0) {
 			altThousands = 0;
+		} else {
+			altThousands = 1;
 		}
-		sendDataTypeInt("ALT_TH_KNOB", altThousands);
+		for (int i = 0; i < rep; i++) {
+			sendDataTypeInt("ALT_TH_KNOB", altThousands);
+		}
 	} 
        	if (altHundreds != 0) {
-		if (altHundreds == -1) {
+		int rep = 5;
+		if (altHundreds < 0) {
 			altHundreds = 0;
+		} else {
+			altHundreds = 1;
 		}
-		sendDataTypeInt("ALT_HU_KNOB", altHundreds);
+		for (int i = 0; i < rep; i++) {
+			sendDataTypeInt("ALT_HU_KNOB", altHundreds);
+		}
 	}
 	showAnnunciators();
 }

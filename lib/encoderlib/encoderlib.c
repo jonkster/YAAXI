@@ -119,8 +119,12 @@ void checkChanges(void) {
 }
 
 int getEncoderDir(int encNum) {
+	int mag = 0;
 	switch (encNum) {
 		case 0:
+			mag = (encoder0Pos - encoder0LastPos);
+			encoder0LastPos = encoder0Pos;
+			return mag;
 			if (encoder0LastPos > encoder0Pos) {
 				encoder0LastPos = encoder0Pos;
 				return -1;
@@ -133,6 +137,9 @@ int getEncoderDir(int encNum) {
 				return 0;
 			break;
 		case 1:
+			mag = (encoder1Pos - encoder1LastPos);
+			encoder1LastPos = encoder1Pos;
+			return mag;
 			if (encoder1LastPos > encoder1Pos) {
 				encoder1LastPos = encoder1Pos;
 				return -1;
@@ -145,6 +152,9 @@ int getEncoderDir(int encNum) {
 				return 0;
 			break;
 		case 2:
+			mag = (encoder2Pos - encoder2LastPos);
+			encoder2LastPos = encoder2Pos;
+			return mag;
 			if (encoder2LastPos > encoder2Pos) {
 				encoder2LastPos = encoder2Pos;
 				return -1;
@@ -157,6 +167,9 @@ int getEncoderDir(int encNum) {
 				return 0;
 			break;
 		case 3:
+			mag = (encoder3Pos - encoder3LastPos);
+			encoder3LastPos = encoder3Pos;
+			return mag;
 			if (encoder3LastPos > encoder3Pos) {
 				encoder3LastPos = encoder3Pos;
 				return -1;
