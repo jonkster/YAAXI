@@ -1,4 +1,1 @@
-.PHONY: printvars
-printvars:
-	$(foreach var,$(.VARIABLES),$(info $(var) = $($(var))))
-
+../../common/helper.mk

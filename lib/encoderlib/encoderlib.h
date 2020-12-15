@@ -16,17 +16,17 @@ extern "C" {
 #define ENC0_B A9
 #define ENC1_A A10
 #define ENC1_B A11
+#define ENC2_A A12
+#define ENC2_B A13
+#define ENC3_A A14
+#define ENC3_B A15
 
 
 int getEncoderValue(int encNum);
 
-bool checkSwitchPushed(void);
-
 bool debugDidSomethingHappen(void);
 
 int getEncoderDir(int encNum);
-
-void resetSwitch(void);
 
 void setupEncoders(void);
 

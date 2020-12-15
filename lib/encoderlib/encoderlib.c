@@ -1,22 +1,33 @@
 #include "encoderlib.h"
 
-volatile bool switchState = false;
 volatile bool enc0_aState = false;
 volatile bool enc0_bState = false;
 volatile bool enc1_aState = false;
 volatile bool enc1_bState = false;
+volatile bool enc2_aState = false;
+volatile bool enc2_bState = false;
+volatile bool enc3_aState = false;
+volatile bool enc3_bState = false;
 
 volatile bool prevSwitchState = false;
 volatile bool prevEnc0_aState = false;
 volatile bool prevEnc0_bState = false;
 volatile bool prevEnc1_aState = false;
 volatile bool prevEnc1_bState = false;
+volatile bool prevEnc2_aState = false;
+volatile bool prevEnc2_bState = false;
+volatile bool prevEnc3_aState = false;
+volatile bool prevEnc3_bState = false;
 
 volatile int encoder0Pos = 0;
 volatile int encoder1Pos = 0;
+volatile int encoder2Pos = 0;
+volatile int encoder3Pos = 0;
+
 volatile int encoder0LastPos = 0;
 volatile int encoder1LastPos = 0;
-volatile bool buttonPressed = 0;
+volatile int encoder2LastPos = 0;
+volatile int encoder3LastPos = 0;
 
 volatile bool somethingHappened = false;
 
@@ -81,64 +92,117 @@ void checkChanges(void) {
 		prevEnc1_bState = enc1_bState;
 		somethingHappened = true;
 	}
-	if (switchState != prevSwitchState) {
-		if (! switchState) {
-			buttonPressed = 1;
-		}
-		prevSwitchState = switchState;
+	if (enc2_aState != prevEnc2_aState) {
+		encoder2LastPos = encoder2Pos;
+		encoder2Pos += calcEncoderDelta(enc2_aState, prevEnc2_aState, enc2_bState, prevEnc2_bState);
+		prevEnc2_aState = enc2_aState;
+		somethingHappened = true;
+	}
+	if (enc2_bState != prevEnc2_bState) {
+		encoder2LastPos = encoder2Pos;
+		encoder2Pos += calcEncoderDelta(enc2_aState, prevEnc2_aState, enc2_bState, prevEnc2_bState);
+		prevEnc2_bState = enc2_bState;
+		somethingHappened = true;
+	}
+	if (enc3_aState != prevEnc3_aState) {
+		encoder3LastPos = encoder3Pos;
+		encoder3Pos += calcEncoderDelta(enc3_aState, prevEnc3_aState, enc3_bState, prevEnc3_bState);
+		prevEnc3_aState = enc3_aState;
+		somethingHappened = true;
+	}
+	if (enc3_bState != prevEnc3_bState) {
+		encoder3LastPos = encoder3Pos;
+		encoder3Pos += calcEncoderDelta(enc3_aState, prevEnc3_aState, enc3_bState, prevEnc3_bState);
+		prevEnc3_bState = enc3_bState;
 		somethingHappened = true;
 	}
 }
 
-bool checkSwitchPushed(void) {
-	bool pressed = buttonPressed;
-	resetSwitch();
-	return pressed;
-}
-
 int getEncoderDir(int encNum) {
-	if (encNum == 0) {
-		if (encoder0LastPos > encoder0Pos) {
-			encoder0LastPos = encoder0Pos;
-			return -1;
-		}
-		else if (encoder0LastPos < encoder0Pos) {
-			encoder0LastPos = encoder0Pos;
-			return 1;
-		}
-		else
+	switch (encNum) {
+		case 0:
+			if (encoder0LastPos > encoder0Pos) {
+				encoder0LastPos = encoder0Pos;
+				return -1;
+			}
+			else if (encoder0LastPos < encoder0Pos) {
+				encoder0LastPos = encoder0Pos;
+				return 1;
+			}
+			else
+				return 0;
+			break;
+		case 1:
+			if (encoder1LastPos > encoder1Pos) {
+				encoder1LastPos = encoder1Pos;
+				return -1;
+			}
+			else if (encoder1LastPos < encoder1Pos) {
+				encoder1LastPos = encoder1Pos;
+				return 1;
+			}
+			else
+				return 0;
+			break;
+		case 2:
+			if (encoder2LastPos > encoder2Pos) {
+				encoder2LastPos = encoder2Pos;
+				return -1;
+			}
+			else if (encoder2LastPos < encoder2Pos) {
+				encoder2LastPos = encoder2Pos;
+				return 1;
+			}
+			else
+				return 0;
+			break;
+		case 3:
+			if (encoder3LastPos > encoder3Pos) {
+				encoder3LastPos = encoder3Pos;
+				return -1;
+			}
+			else if (encoder3LastPos < encoder3Pos) {
+				encoder3LastPos = encoder3Pos;
+				return 1;
+			}
+			else
+				return 0;
+			break;
+		default:
 			return 0;
-	} else {
-		if (encoder1LastPos > encoder1Pos) {
-			encoder1LastPos = encoder1Pos;
-			return -1;
-		}
-		else if (encoder1LastPos < encoder1Pos) {
-			encoder1LastPos = encoder1Pos;
-			return 1;
-		}
-		else
-			return 0;
+			break;
 	}
-	return 0;
 }
 
 int getEncoderValue(int encNum) {
-	if (encNum == 0) {
-		return encoder0Pos;
-	} else {
-		return encoder1Pos;
+	switch (encNum) {
+		case 0:
+			return encoder0Pos;
+			break;
+		case 1:
+			return encoder1Pos;
+			break;
+		case 2:
+			return encoder2Pos;
+			break;
+		case 3:
+			return encoder3Pos;
+			break;
+		default:
+			return 0;
+			break;
 	}
 }
 
 void setupEncoders(void) {
-	pinMode(SW, INPUT_PULLUP);
-	pinMode(ENC_GND, OUTPUT);
-	digitalWrite(ENC_GND, 0);
 	pinMode(ENC0_A, INPUT_PULLUP);
-	pinMode(ENC1_A, INPUT_PULLUP);
 	pinMode(ENC0_B, INPUT_PULLUP);
+	pinMode(ENC1_A, INPUT_PULLUP);
 	pinMode(ENC1_B, INPUT_PULLUP);
+	pinMode(ENC2_A, INPUT_PULLUP);
+	pinMode(ENC2_B, INPUT_PULLUP);
+	pinMode(ENC3_A, INPUT_PULLUP);
+	pinMode(ENC3_B, INPUT_PULLUP);
 
 	cli();
 	PCICR |= (1 << PCIE2);  // turn on port C
@@ -148,20 +212,22 @@ void setupEncoders(void) {
 	PCMSK2 |= (1 << PCINT18);
 	PCMSK2 |= (1 << PCINT19);
 	PCMSK2 |= (1 << PCINT20);
+	PCMSK2 |= (1 << PCINT21);
+	PCMSK2 |= (1 << PCINT22);
+	PCMSK2 |= (1 << PCINT23);
 	sei();
-}
-
-void resetSwitch(void) {
-	buttonPressed = 0;
 }
 
 ISR(PCINT2_vect)
 {
-	switchState = digitalRead(SW);
 	enc0_aState = digitalRead(ENC0_A);
 	enc0_bState = digitalRead(ENC0_B);
 	enc1_aState = digitalRead(ENC1_A);
 	enc1_bState = digitalRead(ENC1_B);
+	enc2_aState = digitalRead(ENC2_A);
+	enc2_bState = digitalRead(ENC2_B);
+	enc3_aState = digitalRead(ENC3_A);
+	enc3_bState = digitalRead(ENC3_B);
 	checkChanges();
 }
 

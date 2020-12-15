@@ -43,8 +43,10 @@ void setup() {
 	Serial.begin(115200);
 	byte mac[] = { MAC_ADDRESS };
 	IPAddress ip( IP_ADDRESS );
+	byte gw[] = { GATEWAY_ADDRESS };
+	byte mask[] = { NETMASK };
 	IPAddress broadcastAddress( NETWORK_BROADCAST_ADDRESS ); 
-	setupEthernet(mac, ip, broadcastAddress, BOXID, BOX_DEFINITIONS);
+	setupEthernet(mac, ip, gw, mask, broadcastAddress, BOXID, BOX_DEFINITIONS);
 	boxSetup();
 	fishForPlugin();
 }
@@ -52,11 +54,14 @@ void setup() {
 
 void loop() {
 	if (! knowsXPAddr()) {
-		noConnectionActions();
 		if (actOnAnyXPMessage()) {
 			setStartState();
+			Serial.println("found plugin");
+		} else {
+			Serial.println("plugin not found, wait");
+			noConnectionActions();
+			delay(2000);
 		}
-		delay(500);
 	} else {
 		actOnAnyXPMessage();
 		boxMainLoop();

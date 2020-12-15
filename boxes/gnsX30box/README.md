@@ -8,8 +8,8 @@ It uses the X-Plane GNS430 floating window that gets displayed on a small
 screen. 
 
 
-![Simplest Panel](gnx530-front.jpg?raw=true "Prototype GNS530 box (front)")
-![Simplest Panel](gnx530-top.jpg?raw=true "Prototype GNS530 box (top)")
+![GNS430/530](gnsfront.jpg?raw=true "Prototype GNS530 box (front)")
+![GNS430/530](gnsback.jpg?raw=true "Prototype GNS530 box (back)")
 
 It is actually a fairly simple device, the arduino just sends info on button
 presses and the pair of rotary encoders but doesn't respond to anything from
