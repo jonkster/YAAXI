@@ -14,9 +14,10 @@ Box is not complete yet.
 
 The box is not meant to be an exact model of an actual real world autopilot
 (mostly because X-Plane doesn't replicate a lot of GA autopilot functionality
-exactly anyway) but it is roughly similar in function to a KAP140.
+exactly anyway) but it is roughly similar in function to a KAP140 or the Garmin
+G1000 autopilot.
 
-It also operates the DI/HSI/RMI heading bug and OBS.
+It also allows you to adjust the DI/HSI/RMI heading bug and OBS via knobs.
 
 Autopilot mode annunciators and altitude selection are displayed on a 128x64
 dot matrix LCD display, (ST7920 chipset) that is driven as a serial (SPI)

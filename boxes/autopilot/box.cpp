@@ -52,10 +52,11 @@ void showAnnunciators() {
 	u8g2.setFont(u8g2_font_unifont_tf);
 	if (currentState.ap || currentState.fd) {
 		if (currentState.ap) {
-			u8g2.drawStr(12,24,"AP");
+			u8g2.drawFrame(10, 13, 20, 16);
+			u8g2.drawStr(13,27,"AP");
 		}
 		if (currentState.fd) {
-			u8g2.drawStr(48,24,"FD");
+			u8g2.drawStr(48,27,"FD");
 		}
 
 		// roll modes
@@ -73,26 +74,21 @@ void showAnnunciators() {
 		// pitch modes
 		// either alt, vs or pitch
 		if (currentState.alt) {
-			u8g2.drawStr(0,36,"ALT");
+			u8g2.drawStr(0,40,"ALT");
 		} else if (currentState.vs) {
-			u8g2.setCursor(0,36);
+			u8g2.setCursor(0,40);
 			u8g2.print("VS ");
 			u8g2.print(currentState.selVs);
 			u8g2.print(" fpm");
 		} else {
-			u8g2.drawStr(0,36,"PITCH");
+			u8g2.drawStr(0,40,"PITCH");
 		}
 	}
 	if (currentState.selAlt > 0) {
-		u8g2.setCursor(0,64);
-		u8g2.print("alt ");
+		u8g2.setCursor(24,64);
 		u8g2.print(currentState.selAlt);
-		u8g2.print(" feet");
+		u8g2.print("'");
 	}
-	/*u8g2.drawStr(0,12,"AP  FD  HDG");
-	u8g2.drawStr(0,24,"ALT NAV  APR");
-	u8g2.drawStr(0,36,"VS 500fpm");
-	u8g2.drawStr(0,48,"alt 12000 armed");*/
 	u8g2.sendBuffer();
 }
 
