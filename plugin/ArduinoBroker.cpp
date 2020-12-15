@@ -61,6 +61,7 @@ char ardLog[50][128] = {
 bool		callBackActive = false;
 
 bool		paused = true;
+bool		sendAll = false;
 int		readSock = -1;
 int		writeSock = -1;
 struct		sockaddr_in listenSockAddr;
@@ -77,6 +78,7 @@ void		handleBoxIdMsg(const char* msg);
 static void	menuHandlerCallback(void*, void*); 
 void		parseAddressEntry(std::string);
 void		parseControlEntry(std::string);
+void		parseDataRefEntry(std::string line);
 void		parseDisplayEntry(std::string);
 void		parseInitialEntry(std::string);
 bool 		readIniFile();
@@ -160,6 +162,7 @@ std::map<std::string,  XPLMCommandRef> controlConfigCommandOn;
 std::map<std::string,  XPLMCommandRef> controlConfigCommandOff; 
 
 std::map<std::string,  XPLMDataRef> dataRefs; 
+std::map<std::string,  XPLMDataRef> writeToDataRefs; 
 std::map<std::string,  std::string> boxDevices; 
 std::map<std::string,  int> dataRefIndex; 
 std::map<std::string,  std::string> dataRefLogic; 
@@ -296,6 +299,14 @@ void handleBoxChangeMsg(const char* msg) {
 
 
 
+void speakMsg(const char *msg) {
+	std::string words(msg);
+	int pos;
+	if ((pos = words.find(":")) != std::string::npos) {
+		words.erase(0, pos + 1);
+		XPLMSpeakString(words.c_str());
+	}
+}
 
 void actOnBoxMessage(const int sock, const char* msg, struct sockaddr_in cliAddr) {
 	if (strlen(msg) == 0) {
@@ -306,6 +317,10 @@ void actOnBoxMessage(const int sock, const char* msg, struct sockaddr_in cliAddr
 	} else if (strncmp(msg, "BOXID:", 6) == 0) {
 		// box has sent details about itself
 		handleBoxIdMsg(msg);
+	} else if (strncmp(msg, "update", 6) == 0) {
+		sendAll = true;
+	} else if (strncmp(msg, "SPEAK:", 6) == 0) {
+		speakMsg(msg);
 	} else {
 		handleBoxChangeMsg(msg);
 	}
@@ -457,6 +472,8 @@ void iniLineParse(std::string line) {
 				parseInitialEntry(cleanLine);
     			} else if ((type == "A") || (type == "a")) {
 				parseAddressEntry(cleanLine);
+    			} else if ((type == "DR") || (type == "dr")) {
+				parseDataRefEntry(cleanLine);
     			} else {
 				addLogMessage("ignoring line, expected 'C' or 'D': ", type.c_str());
 			}
@@ -508,6 +525,39 @@ void parseControlEntry(std::string line) {
 			addLogMessage("ignoring line, expected On Command: ", line.c_str());
 		}
 		std::string offCmd;
+	} else {
+		addLogMessage("ignoring line, expected device, could not parse: ", line.c_str());
+	}
+}
+
+void parseDataRefEntry(std::string line) {
+	int pos;
+	addLogMessage("parsing data ref entry: ", line.c_str());
+	if ((pos = line.find(":")) != std::string::npos) {
+		std::string device = line.substr(0, pos).c_str();
+		line.erase(0, pos + 1);
+		if ((pos = line.find(":")) != std::string::npos) {
+			std::string dataRefSt = line.substr(0, pos).c_str();
+			line.erase(0, pos + 1);
+			if ((pos = line.find(":")) != std::string::npos) {
+				std::string index = line.substr(0, pos).c_str();
+				line.erase(0, pos + 1);
+				if ((pos = line.find(":")) != std::string::npos) {
+					std::string logic = line.substr(0, pos).c_str();
+					line.erase(0, pos + 1);
+					std::string boxName = line;
+					addLogMessage(boxName.c_str(), device.c_str());
+					XPLMDataRef dataRef = XPLMFindDataRef(dataRefSt.c_str());
+					writeToDataRefs.insert({device, dataRef});
+				} else {
+					addLogMessage("ignoring line, expected logic field, could not parse: ", line.c_str());
+				}
+			} else {
+				addLogMessage("ignoring line, expected index field, could not parse: ", line.c_str());
+			}
+		} else {
+			addLogMessage("ignoring line, expected dataref field, could not parse: ", line.c_str());
+		}
 	} else {
 		addLogMessage("ignoring line, expected device, could not parse: ", line.c_str());
 	}
@@ -579,6 +629,7 @@ void eraseIniData() {
 	dataRefIndex.clear();
 	dataRefLogic.clear();
 	dataRefs.clear();
+	writeToDataRefs.clear();
 }
 
 bool readIniFile() {
@@ -690,6 +741,16 @@ void calculateResponse(std::string boxName, std::string device, std::string oldV
 					match = currentValue >= opValue;
 				} else if (opCode == "LTE") {
 					match = currentValue <= opValue;
+				} else if (opCode == "EXACTIFDIFFGT") {
+					//addLogMessage((currentValue + " " + opCode + " " + opValue).c_str() , (", was " + oldValue + " -> " + currentValue).c_str());
+					if (abs(std::stof(currentValue) - std::stof(oldValue)) > std::stof(opValue)) {
+						//addLogMessage("YES current = ", (oldValue + " -> " + currentValue).c_str());
+						sendArduinoBox(boxName, (device + ":" + currentValue).c_str());
+					} else if (sendAll) {
+						sendArduinoBox(boxName, (device + ":" + currentValue).c_str());
+					}
+					//addLogMessage("NO current = ", (oldValue + " -> " + currentValue).c_str());
+					return;
 				} else {
 					addLogMessage("Unknown operator: ", opCode.c_str());
 					return;
@@ -739,4 +800,5 @@ void sendAnyChangesToBox() {
 		}
 		v++;
 	}
+	sendAll = false;
 }
