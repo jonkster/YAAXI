@@ -27,6 +27,7 @@ EthernetUDP	Udp;
 
 bool foundXP = false;
 bool verbose = DEBUG_MODE;
+bool diagMode = DIAG_MODE;
 
 
 void setupEthernet(byte *mac, IPAddress ipa, byte *gw, byte* mask, IPAddress bCast, const char* bid, const char* bDefs) {
@@ -43,6 +44,10 @@ void setupEthernet(byte *mac, IPAddress ipa, byte *gw, byte* mask, IPAddress bCa
 
 	boxDefs = (char*)malloc(strlen(bDefs)+1);
 	strcpy(boxDefs, bDefs);
+	if (diagMode) {
+		Serial.println("DIAGNOSTIC MODE - NO DATA BEING SENT!");
+		Serial.println("(to disable edit communication.h)");
+	}
 }
 
 void sendDataTypeBool(const char* code, bool data ) {
@@ -63,7 +68,16 @@ void sendDataTypeLong(const char* code, long data ) {
 	sendMessage(msg);
 }
 
+long int dNum;
 void sendMessage(const char* msg) {
+	if (diagMode) {
+		Serial.print("#");
+		Serial.print(dNum++);
+		Serial.print(": ");
+		Serial.print(msg);
+		Serial.print("\r");
+		return;
+	}
 	if (verbose) {
 		Serial.print("Sending msg: ");
 		Serial.print(msg);

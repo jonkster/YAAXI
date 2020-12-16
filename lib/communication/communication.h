@@ -8,7 +8,8 @@
 
 #define MSG_BOX_FISH "Avduino Box Fish"
 
-#define DEBUG_MODE true
+#define DEBUG_MODE false
+#define DIAG_MODE true
 
 #ifdef __cplusplus
 extern "C" {
