@@ -29,7 +29,10 @@ volatile int encoder1LastPos = 0;
 volatile int encoder2LastPos = 0;
 volatile int encoder3LastPos = 0;
 
-volatile bool somethingHappened = false;
+#define BOUNCE_DELAY 2000
+volatile unsigned long tNow = 0;
+volatile unsigned long tPrev = 0;
+volatile bool fast = false;
 
 int calcEncoderDelta(int aNow, int aPrev, int bNow, int bPrev) {
 	if ((aPrev == LOW) && (aNow == HIGH)) {
@@ -38,7 +41,7 @@ int calcEncoderDelta(int aNow, int aPrev, int bNow, int bPrev) {
 		} else {
 			return 1;
 		}
-	} /*else if ((aPrev == HIGH) && (aNow == LOW)) {
+	} else if ((aPrev == HIGH) && (aNow == LOW)) {
 		if (bNow == HIGH) {
 			return -1;
 		} else {
@@ -50,7 +53,7 @@ int calcEncoderDelta(int aNow, int aPrev, int bNow, int bPrev) {
 		} else {
 			return 1;
 		}
-	} */ else if ((bPrev == HIGH) && (bNow == LOW)) {
+	}  else if ((bPrev == HIGH) && (bNow == LOW)) {
 		if (aNow == LOW) {
 			return -1;
 		} else {
@@ -60,61 +63,46 @@ int calcEncoderDelta(int aNow, int aPrev, int bNow, int bPrev) {
 	return 0;
 }
 
-bool debugDidSomethingHappen(void) {
-	bool tmp = somethingHappened;
-	somethingHappened = false;
-	return tmp;
-}
-
 void checkChanges(void) {
-	somethingHappened = false;
 	if (enc0_aState != prevEnc0_aState) {
 		encoder0LastPos = encoder0Pos;
 		encoder0Pos += calcEncoderDelta(enc0_aState, prevEnc0_aState, enc0_bState, prevEnc0_bState);
 		prevEnc0_aState = enc0_aState;
-		somethingHappened = true;
 	}
 	if (enc0_bState != prevEnc0_bState) {
 		encoder0LastPos = encoder0Pos;
 		encoder0Pos += calcEncoderDelta(enc0_aState, prevEnc0_aState, enc0_bState, prevEnc0_bState);
 		prevEnc0_bState = enc0_bState;
-		somethingHappened = true;
 	}
 	if (enc1_aState != prevEnc1_aState) {
 		encoder1LastPos = encoder1Pos;
 		encoder1Pos += calcEncoderDelta(enc1_aState, prevEnc1_aState, enc1_bState, prevEnc1_bState);
 		prevEnc1_aState = enc1_aState;
-		somethingHappened = true;
 	}
 	if (enc1_bState != prevEnc1_bState) {
 		encoder1LastPos = encoder1Pos;
 		encoder1Pos += calcEncoderDelta(enc1_aState, prevEnc1_aState, enc1_bState, prevEnc1_bState);
 		prevEnc1_bState = enc1_bState;
-		somethingHappened = true;
 	}
 	if (enc2_aState != prevEnc2_aState) {
 		encoder2LastPos = encoder2Pos;
 		encoder2Pos += calcEncoderDelta(enc2_aState, prevEnc2_aState, enc2_bState, prevEnc2_bState);
 		prevEnc2_aState = enc2_aState;
-		somethingHappened = true;
 	}
 	if (enc2_bState != prevEnc2_bState) {
 		encoder2LastPos = encoder2Pos;
 		encoder2Pos += calcEncoderDelta(enc2_aState, prevEnc2_aState, enc2_bState, prevEnc2_bState);
 		prevEnc2_bState = enc2_bState;
-		somethingHappened = true;
 	}
 	if (enc3_aState != prevEnc3_aState) {
 		encoder3LastPos = encoder3Pos;
 		encoder3Pos += calcEncoderDelta(enc3_aState, prevEnc3_aState, enc3_bState, prevEnc3_bState);
 		prevEnc3_aState = enc3_aState;
-		somethingHappened = true;
 	}
 	if (enc3_bState != prevEnc3_bState) {
 		encoder3LastPos = encoder3Pos;
 		encoder3Pos += calcEncoderDelta(enc3_aState, prevEnc3_aState, enc3_bState, prevEnc3_bState);
 		prevEnc3_bState = enc3_bState;
-		somethingHappened = true;
 	}
 }
 
@@ -124,62 +112,34 @@ int getEncoderDir(int encNum) {
 		case 0:
 			mag = (encoder0Pos - encoder0LastPos);
 			encoder0LastPos = encoder0Pos;
+			if (fast) {
+				return mag * 3;
+			}
 			return mag;
-			if (encoder0LastPos > encoder0Pos) {
-				encoder0LastPos = encoder0Pos;
-				return -1;
-			}
-			else if (encoder0LastPos < encoder0Pos) {
-				encoder0LastPos = encoder0Pos;
-				return 1;
-			}
-			else
-				return 0;
 			break;
 		case 1:
 			mag = (encoder1Pos - encoder1LastPos);
 			encoder1LastPos = encoder1Pos;
+			if (fast) {
+				return mag * 3;
+			}
 			return mag;
-			if (encoder1LastPos > encoder1Pos) {
-				encoder1LastPos = encoder1Pos;
-				return -1;
-			}
-			else if (encoder1LastPos < encoder1Pos) {
-				encoder1LastPos = encoder1Pos;
-				return 1;
-			}
-			else
-				return 0;
 			break;
 		case 2:
 			mag = (encoder2Pos - encoder2LastPos);
 			encoder2LastPos = encoder2Pos;
+			if (fast) {
+				return mag * 3;
+			}
 			return mag;
-			if (encoder2LastPos > encoder2Pos) {
-				encoder2LastPos = encoder2Pos;
-				return -1;
-			}
-			else if (encoder2LastPos < encoder2Pos) {
-				encoder2LastPos = encoder2Pos;
-				return 1;
-			}
-			else
-				return 0;
 			break;
 		case 3:
 			mag = (encoder3Pos - encoder3LastPos);
 			encoder3LastPos = encoder3Pos;
+			if (fast) {
+				return mag * 3;
+			}
 			return mag;
-			if (encoder3LastPos > encoder3Pos) {
-				encoder3LastPos = encoder3Pos;
-				return -1;
-			}
-			else if (encoder3LastPos < encoder3Pos) {
-				encoder3LastPos = encoder3Pos;
-				return 1;
-			}
-			else
-				return 0;
 			break;
 		default:
 			return 0;
@@ -233,15 +193,20 @@ void setupEncoders(void) {
 
 ISR(PCINT2_vect)
 {
-	enc0_aState = digitalRead(ENC0_A);
-	enc0_bState = digitalRead(ENC0_B);
-	enc1_aState = digitalRead(ENC1_A);
-	enc1_bState = digitalRead(ENC1_B);
-	enc2_aState = digitalRead(ENC2_A);
-	enc2_bState = digitalRead(ENC2_B);
-	enc3_aState = digitalRead(ENC3_A);
-	enc3_bState = digitalRead(ENC3_B);
-	checkChanges();
+	tNow = micros();
+	if ((tNow - tPrev) > BOUNCE_DELAY) {
+		enc0_aState = digitalRead(ENC0_A);
+		enc0_bState = digitalRead(ENC0_B);
+		enc1_aState = digitalRead(ENC1_A);
+		enc1_bState = digitalRead(ENC1_B);
+		enc2_aState = digitalRead(ENC2_A);
+		enc2_bState = digitalRead(ENC2_B);
+		enc3_aState = digitalRead(ENC3_A);
+		enc3_bState = digitalRead(ENC3_B);
+		checkChanges();
+		fast = (tNow - tPrev) < (5 * BOUNCE_DELAY);
+	}
+	tPrev = tNow;
 }
 
 

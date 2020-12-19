@@ -19,8 +19,8 @@
 #define VS   36
 #define UP   35
 #define DOWN 34
-#define OBS_PUSH 43
-#define HDG_PUSH 44
+#define HDG_PUSH 43
+#define OBS_PUSH 44
 #define ALT_PUSH 45
 
 # define CLK 10  // E
@@ -305,23 +305,25 @@ void sendChanges() {
 void boxMainLoop(void) {
 	checkSwitches();
 	sendChanges();
-	int crs = getEncoderDir(0);
-	int hdg = getEncoderDir(1);
+	int hdg = getEncoderDir(0);
+	int crs = getEncoderDir(1);
 	int altThousands = getEncoderDir(2);
 	int altHundreds = getEncoderDir(3);
 	if (crs != 0) {
-		int rep = 5;
+		// allow acceleration based on knob speed
+		int rep = abs(crs);
 		if (crs < 0) {
-			crs = 0;
-		} else {
 			crs = 1;
+		} else {
+			crs = 0;
 		}
 		for (int i = 0; i < rep; i++) {
 			sendDataTypeInt("CRS_KNOB", crs);
 		}
 	} 
 	if (hdg != 0) {
-		int rep = 5;
+		// allow acceleration based on knob speed
+		int rep = abs(hdg);
 		if (hdg < 0) {
 			hdg = 0;
 		} else {
@@ -332,26 +334,22 @@ void boxMainLoop(void) {
 		}
 	} 
        	if (altThousands != 0) {
-		int rep = 5;
 		if (altThousands < 0) {
 			altThousands = 0;
 		} else {
 			altThousands = 1;
 		}
-		for (int i = 0; i < rep; i++) {
-			sendDataTypeInt("ALT_TH_KNOB", altThousands);
+		for (int i = 0; i < 2; i++) {
+			sendDataTypeInt("ALT_HU_KNOB", altThousands);
 		}
 	} 
        	if (altHundreds != 0) {
-		int rep = 5;
 		if (altHundreds < 0) {
-			altHundreds = 0;
-		} else {
 			altHundreds = 1;
+		} else {
+			altHundreds = 0;
 		}
-		for (int i = 0; i < rep; i++) {
-			sendDataTypeInt("ALT_HU_KNOB", altHundreds);
-		}
+		sendDataTypeInt("ALT_HU_KNOB", altHundreds);
 	}
 	showAnnunciators();
 }

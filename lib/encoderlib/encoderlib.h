@@ -21,10 +21,7 @@ extern "C" {
 #define ENC3_A A14
 #define ENC3_B A15
 
-
 int getEncoderValue(int encNum);
-
-bool debugDidSomethingHappen(void);
 
 int getEncoderDir(int encNum);
 

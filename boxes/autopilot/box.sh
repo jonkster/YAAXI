@@ -14,42 +14,26 @@ else
 		ALTITUDE=230
 		ALTSEL=2000
 		VS=500
+		echo -n "ALT_SEL:${ALTSEL}" | nc -4u -w0 $1 8888
+		echo -n "AP_VS:${VS}" | nc -4u -w0 $1 8888
+		echo -n "ALTITUDE:${ALTITUDE}" | nc -4u -w0 $1 8888
+		echo -n "AP_MODE:0" | nc -4u -w0 $1 8888
+		echo -n "FD_MODE:0" | nc -4u -w0 $1 8888
+		echo -n "VS_MODE:1" | nc -4u -w0 $1 8888
 		echo "Got valid BOXID."
 		echo "Sending ${1} control messages - AP annunciator should flash several times"
 		for in in {1..3}
 		do
-			echo -n "ALT_SEL:${ALTSEL}" | nc -4u -w0 $1 8888
-			echo -n "AP_VS:${VS}" | nc -4u -w0 $1 8888
-			echo -n "ALTITUDE:${ALTITUDE}" | nc -4u -w0 $1 8888
 			ALTITUDE=$(( $ALTITUDE + 500 ));
 			ALTSEL=$(( $ALTSEL + 1000 ));
 			VS=$(( $VS + 100 ));
 
 			echo -n "AP_MODE:1" | nc -4u -w0 $1 8888
-			echo -n "FD_MODE:1" | nc -4u -w0 $1 8888
 			sleep 0.5
-			echo -n "HDG_MODE:1" | nc -4u -w0 $1 8888
-			sleep 0.5
-			echo -n "ALT_MODE:1" | nc -4u -w0 $1 8888
-			sleep 0.5
-			echo -n "NAV_MODE:1" | nc -4u -w0 $1 8888
-			sleep 0.5
-			echo -n "HDG_MODE:0" | nc -4u -w0 $1 8888
-			sleep 0.5
-			echo -n "VS_MODE:1" | nc -4u -w0 $1 8888
-			sleep 0.5
-			echo -n "ALT_MODE:0" | nc -4u -w0 $1 8888
-			sleep 1.5
-			echo -n "HDG:0" | nc -4u -w0 $1 8888
-			echo -n "NAV_MODE:0" | nc -4u -w0 $1 8888
-			echo -n "VS_MODE:0" | nc -4u -w0 $1 8888
-			echo -n "ALT_MODE:0" | nc -4u -w0 $1 8888
 			echo -n "AP_MODE:0" | nc -4u -w0 $1 8888
-			sleep 1.0
-			echo -n "FD_MODE:0" | nc -4u -w0 $1 8888
-			sleep 1.5
+			sleep 0.5
 		done
-		sleep 3
+		sleep 1
 		echo -n "AP_MODE:1" | nc -4u -w0 $1 8888
 		echo -n "FD_MODE:1" | nc -4u -w0 $1 8888
 		echo "listening for messages from arduino box ${1}"
