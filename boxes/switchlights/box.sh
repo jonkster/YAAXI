@@ -13,21 +13,21 @@ else
 	then
 		for n in {1..3}
 		do
-			sleep 0.5
+			sleep 0.1
 			echo -n "GEAR_TRANSIT:1" | nc -4u -w0 $1 8888
-			sleep 0.5
+			sleep 0.1
 			echo -n "GEAR_SAFE0:1" | nc -4u -w0 $1 8888
-			sleep 0.5
+			sleep 0.1
 			echo -n "GEAR_SAFE1:1" | nc -4u -w0 $1 8888
-			sleep 0.5
+			sleep 0.1
 			echo -n "GEAR_SAFE2:1" | nc -4u -w0 $1 8888
-			sleep 0.5
+			sleep 0.1
 			echo -n "FLAP_TRANSIT:1" | nc -4u -w0 $1 8888
-			sleep 0.5
+			sleep 0.1
 			echo -n "FLAP_APP:1" | nc -4u -w0 $1 8888
-			sleep 0.5
+			sleep 0.1
 			echo -n "FLAP_LAND:1" | nc -4u -w0 $1 8888
-			sleep 0.5
+			sleep 0.1
 			echo -n "GEAR_TRANSIT:0" | nc -4u -w0 $1 8888
 			echo -n "GEAR_SAFE0:0" | nc -4u -w0 $1 8888
 			echo -n "GEAR_SAFE1:0" | nc -4u -w0 $1 8888
