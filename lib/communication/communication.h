@@ -8,8 +8,8 @@
 
 #define MSG_BOX_FISH "Avduino Box Fish"
 
-#define DEBUG_MODE false
-#define DIAG_MODE true
+#define DEBUG_MODE true
+#define DIAG_MODE false
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,6 +28,8 @@ extern "C" {
 	void sendBoxConfig(void);
 
 	void sendDataTypeBool(const char* code, bool data);
+
+	void sendDataTypeFloat(const char* code, double data );
 
 	void sendDataTypeInt(const char* code, int data);
 

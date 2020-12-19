@@ -11,32 +11,31 @@ else
 	echo "Looking for a BOXID response, got: ${BOXID}"
 	if [[ "${BOXID}" == "BOXID"* ]]
 	then
-		ALTITUDE=230
-		ALTSEL=2000
-		VS=500
-		echo -n "ALT_SEL:${ALTSEL}" | nc -4u -w0 $1 8888
-		echo -n "AP_VS:${VS}" | nc -4u -w0 $1 8888
-		echo -n "ALTITUDE:${ALTITUDE}" | nc -4u -w0 $1 8888
-		echo -n "AP_MODE:0" | nc -4u -w0 $1 8888
-		echo -n "FD_MODE:0" | nc -4u -w0 $1 8888
-		echo -n "VS_MODE:1" | nc -4u -w0 $1 8888
-		echo "Got valid BOXID."
-		echo "Sending ${1} control messages - AP annunciator should flash several times"
 		for n in {1..3}
 		do
-			ALTITUDE=$(( $ALTITUDE + 500 ));
-			ALTSEL=$(( $ALTSEL + 1000 ));
-			VS=$(( $VS + 100 ));
-
-			echo -n "AP_MODE:1" | nc -4u -w0 $1 8888
 			sleep 0.5
-			echo -n "AP_MODE:0" | nc -4u -w0 $1 8888
+			echo -n "GEAR_TRANSIT:1" | nc -4u -w0 $1 8888
 			sleep 0.5
+			echo -n "GEAR_SAFE0:1" | nc -4u -w0 $1 8888
+			sleep 0.5
+			echo -n "GEAR_SAFE1:1" | nc -4u -w0 $1 8888
+			sleep 0.5
+			echo -n "GEAR_SAFE2:1" | nc -4u -w0 $1 8888
+			sleep 0.5
+			echo -n "FLAP_TRANSIT:1" | nc -4u -w0 $1 8888
+			sleep 0.5
+			echo -n "FLAP_APP:1" | nc -4u -w0 $1 8888
+			sleep 0.5
+			echo -n "FLAP_LAND:1" | nc -4u -w0 $1 8888
+			sleep 0.5
+			echo -n "GEAR_TRANSIT:0" | nc -4u -w0 $1 8888
+			echo -n "GEAR_SAFE0:0" | nc -4u -w0 $1 8888
+			echo -n "GEAR_SAFE1:0" | nc -4u -w0 $1 8888
+			echo -n "GEAR_SAFE2:0" | nc -4u -w0 $1 8888
+			echo -n "FLAP_TRANSIT:0" | nc -4u -w0 $1 8888
+			echo -n "FLAP_APP:0" | nc -4u -w0 $1 8888
+			echo -n "FLAP_LAND:0" | nc -4u -w0 $1 8888
 		done
-		sleep 1
-		echo -n "AP_MODE:1" | nc -4u -w0 $1 8888
-		echo -n "FD_MODE:1" | nc -4u -w0 $1 8888
-		echo "listening for messages from arduino box ${1}"
 		echo "(try toggling switches etc and check to see there are responses below. Ctrl-C to quit)"
 		nc -4u -l  8889
 	else

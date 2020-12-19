@@ -56,6 +56,12 @@ void sendDataTypeBool(const char* code, bool data ) {
 	sendMessage(msg);
 }
 
+void sendDataTypeFloat(const char* code, double data ) {
+	char msg[48];
+	snprintf(msg, sizeof(msg), "%s:%3.2f\n", code, data);
+	sendMessage(msg);
+}
+
 void sendDataTypeInt(const char* code, int data ) {
 	char msg[48];
 	snprintf(msg, sizeof(msg), "%s:%i\n", code, data);

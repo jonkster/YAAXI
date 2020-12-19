@@ -7,8 +7,8 @@ void actOnXPControlMessage(char* msg) {
 	char* token;
 	token = strtok(msg, seps);
 	if (token != NULL) {
-		char device[12];
-		strncpy(device, token, 12);
+		char device[16];
+		strncpy(device, token, 15);
 		token = strtok(NULL, seps);
 		if (token != NULL) {
 			setControl(device, token);
