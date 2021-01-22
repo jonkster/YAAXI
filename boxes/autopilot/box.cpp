@@ -10,18 +10,35 @@
 // DISPLAY devices
 
 // CONTROL devices
-#define AP   42
-#define FD   41
-#define HDG  40
-#define ALT  39
-#define NAV  38
-#define APR  37
-#define VS   36
-#define UP   35
-#define DOWN 34
-#define HDG_PUSH 43
-#define OBS_PUSH 44
-#define ALT_PUSH 45
+#define AP   35
+#define FD   34
+#define HDG  37
+#define ALT  36
+#define NAV  39
+#define APR  38
+#define VS   40
+#define FLC   41
+#define UP   33
+#define DOWN 32
+#define OBS_PUSH 30
+#define HDG_PUSH 31
+#define ALT_PUSH 29
+
+
+#define ENC_NUM_OBS 3
+#define ENC_NUM_HDG 2
+#define ENC_NUM_ALT100 1
+#define ENC_NUM_ALT1000 0
+
+#define GEAR_TRANS 42
+#define GEAR_1 49
+#define GEAR_2 48
+#define GEAR_3 44
+#define FLAP_TRANS 47
+#define FLAP_APP 46
+#define FLAP_FULL 45
+
+#define ANN_TEST 43
 
 # define CLK 10  // E
 # define DATA 9 // R/W
@@ -36,6 +53,7 @@ struct tBoxState {
 	bool nav;
 	bool apr;
 	bool vs;
+	bool flc;
 	bool up;
 	bool down;
 	bool obs_push;
@@ -44,10 +62,30 @@ struct tBoxState {
 	int  altSelected;
 	int  vspeedSelected;
 	int  altitude;
+
+	bool annucGearTransit;
+	bool annucGear1;
+	bool annucGear2;
+	bool annucGear3;
+	bool annucFlapTransit;
+	bool annucFlapApp;
+	bool annucFlapFull;
+	bool annucTestMode;
 };
 struct tBoxState currentState;
 struct tBoxState prevState;
 
+unsigned long testModeStart = 0;
+void flashAnnunciators(bool state) {
+	testModeStart = millis();
+	digitalWrite(GEAR_TRANS, state);
+	digitalWrite(GEAR_1, state);
+	digitalWrite(GEAR_2, state);
+	digitalWrite(GEAR_3, state);
+	digitalWrite(FLAP_TRANS, state);
+	digitalWrite(FLAP_APP, state);
+	digitalWrite(FLAP_FULL, state);
+}
 void showAnnunciators() {
 	u8g2.clearBuffer();
 	u8g2.setFont(u8g2_font_unifont_tf);
@@ -81,6 +119,8 @@ void showAnnunciators() {
 			u8g2.print("VS ");
 			u8g2.print(currentState.vspeedSelected);
 			u8g2.print(" fpm");
+		} else if (currentState.flc) {
+			u8g2.drawStr(0,45,"FLC");
 		} else {
 			u8g2.drawStr(0,45,"PITCH");
 		}
@@ -90,8 +130,23 @@ void showAnnunciators() {
 		u8g2.print(currentState.altSelected);
 		u8g2.print("'");
 	}
-	u8g2.drawVLine(100, 0, 64);
+	//u8g2.drawVLine(100, 0, 64);
 	u8g2.sendBuffer();
+
+	if (! currentState.annucTestMode) {
+		digitalWrite(GEAR_TRANS, currentState.annucGearTransit);
+		digitalWrite(GEAR_1, currentState.annucGear1);
+		digitalWrite(GEAR_2, currentState.annucGear2);
+		digitalWrite(GEAR_3, currentState.annucGear3);
+		digitalWrite(FLAP_TRANS, currentState.annucFlapTransit);
+		digitalWrite(FLAP_APP, currentState.annucFlapApp);
+		digitalWrite(FLAP_FULL, currentState.annucFlapFull);
+	} else {
+		if ((millis() - testModeStart) > 1000) {
+			testModeStart = 0;
+			currentState.annucTestMode = false;
+		}
+	}
 }
 
 
@@ -102,6 +157,7 @@ void setStartState(void) {
 	currentState.alt = false;
 	currentState.nav = false;
 	currentState.apr = false;
+	currentState.flc = false;
 	currentState.vs = false;
 	currentState.up = false;
 	currentState.down = false;
@@ -111,6 +167,14 @@ void setStartState(void) {
 	currentState.altSelected = 1800;
 	currentState.vspeedSelected = 0;
 	currentState.altitude = 230;
+	currentState.annucGearTransit = 0;
+	currentState.annucGear1 = 0;
+	currentState.annucGear2 = 0;
+	currentState.annucGear3 = 0;
+	currentState.annucFlapTransit = 0;
+	currentState.annucFlapApp = 0;
+	currentState.annucFlapFull = 0;
+	currentState.annucTestMode = 0;
 	prevState = currentState;
 
 	u8g2.clearBuffer();
@@ -163,6 +227,8 @@ void boxSetup() {
 	pinMode(NAV, INPUT_PULLUP);
 	pinMode(APR, INPUT_PULLUP);
 	pinMode(VS, INPUT_PULLUP);
+	pinMode(FLC, INPUT_PULLUP);
+	pinMode(ANN_TEST, INPUT_PULLUP);
 	pinMode(UP, INPUT_PULLUP);
 	pinMode(DOWN, INPUT_PULLUP);
 	pinMode(OBS_PUSH, INPUT_PULLUP);
@@ -170,6 +236,13 @@ void boxSetup() {
 	pinMode(ALT_PUSH, INPUT_PULLUP);
 	setupEncoders();
 
+	pinMode(GEAR_TRANS, OUTPUT);
+	pinMode(GEAR_1, OUTPUT);
+	pinMode(GEAR_2, OUTPUT);
+	pinMode(GEAR_3, OUTPUT);
+	pinMode(FLAP_TRANS, OUTPUT);
+	pinMode(FLAP_APP, OUTPUT);
+	pinMode(FLAP_FULL, OUTPUT);
 	u8g2.begin();
 	//u8g2.setFont(u8g2_font_courB08_tr);
 	u8g2.firstPage();
@@ -228,6 +301,9 @@ void setControl(char* device, char* value) {
        	if (strcmp("VS_MODE", device) == 0) {
 		currentState.vs = (v == 1);
 	} 
+       	if (strcmp("FLC_MODE", device) == 0) {
+		currentState.flc = (v == 1);
+	} 
        	if (strcmp("ALT_SEL", device) == 0) {
 		currentState.altSelected = v;
 	} 
@@ -237,6 +313,25 @@ void setControl(char* device, char* value) {
        	if (strcmp("ALTITUDE", device) == 0) {
 		currentState.altitude = v;
 	} 
+       	if (strcmp("GEARSAFE1", device) == 0) {
+		currentState.annucGear1 = (v == 1);
+	}
+       	if (strcmp("GEARSAFE2", device) == 0) {
+		currentState.annucGear2 = (v == 1);
+	}
+       	if (strcmp("GEARSAFE3", device) == 0) {
+		currentState.annucGear3 = (v == 1);
+	} 
+       	if (strcmp("GEARTRANSIT", device) == 0) {
+		currentState.annucGearTransit = (v == 1);
+	}
+       	if (strcmp("FLAP", device) == 0) {
+		currentState.annucFlapApp = (v == 1);
+		currentState.annucFlapFull = (v == 2);
+	} 
+       	if (strcmp("FLAPTRANSIT", device) == 0) {
+		currentState.annucFlapTransit = (v == 1);
+	}
 }
 
 int bouncer = 0;
@@ -278,6 +373,10 @@ void sendChanges() {
 			sendDataTypeBool("VS_TOGGLE", 1);
 			markStart(10);
 		}
+		if (!digitalRead(FLC)) {
+			sendDataTypeBool("FLC_TOGGLE", 1);
+			markStart(10);
+		}
 		if (!digitalRead(UP)) {
 			sendDataTypeBool("AP_UP", 1);
 			markStart(10);
@@ -298,6 +397,11 @@ void sendChanges() {
 			sendDataTypeBool("ALT_SYNC_TOGGLE", 1);
 			markStart(10);
 		}
+		if (!digitalRead(ANN_TEST)) {
+			currentState.annucTestMode = 1;
+			flashAnnunciators(1);
+			markStart(10);
+		}
 	} else {
 	}
 }
@@ -305,20 +409,20 @@ void sendChanges() {
 void boxMainLoop(void) {
 	checkSwitches();
 	sendChanges();
-	int hdg = getEncoderDir(0);
-	int crs = getEncoderDir(1);
-	int altThousands = getEncoderDir(2);
-	int altHundreds = getEncoderDir(3);
-	if (crs != 0) {
+	int hdg = getEncoderDir(ENC_NUM_HDG);
+	int obs = getEncoderDir(ENC_NUM_OBS);
+	int altThousands = getEncoderDir(ENC_NUM_ALT1000);
+	int altHundreds = getEncoderDir(ENC_NUM_ALT100);
+	if (obs != 0) {
 		// allow acceleration based on knob speed
-		int rep = abs(crs);
-		if (crs < 0) {
-			crs = 1;
+		int rep = abs(obs);
+		if (obs < 0) {
+			obs = 1;
 		} else {
-			crs = 0;
+			obs = 0;
 		}
 		for (int i = 0; i < rep; i++) {
-			sendDataTypeInt("CRS_KNOB", crs);
+			sendDataTypeInt("OBS_KNOB", obs);
 		}
 	} 
 	if (hdg != 0) {
@@ -340,7 +444,7 @@ void boxMainLoop(void) {
 			altThousands = 1;
 		}
 		for (int i = 0; i < 2; i++) {
-			sendDataTypeInt("ALT_HU_KNOB", altThousands);
+			sendDataTypeInt("ALT_TH_KNOB", altThousands);
 		}
 	} 
        	if (altHundreds != 0) {
