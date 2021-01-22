@@ -21,7 +21,9 @@ else
 		echo -n "FD_MODE:0" | nc -4u -w0 $1 8888
 		echo -n "FLC_MODE:0" | nc -4u -w0 $1 8888
 		echo -n "VS_MODE:1" | nc -4u -w0 $1 8888
-		echo -n "GEARSAFE:0" | nc -4u -w0 $1 8888
+		echo -n "GEAR_SAFE0:0" | nc -4u -w0 $1 8888
+		echo -n "GEAR_SAFE1:0" | nc -4u -w0 $1 8888
+		echo -n "GEAR_SAFE2:0" | nc -4u -w0 $1 8888
 		echo "Got valid BOXID."
 		echo "Sending ${1} control messages - AP annunciator should flash several times"
 		for n in {1..2}
@@ -34,41 +36,41 @@ else
 			sleep 0.5
 			echo -n "AP_MODE:0" | nc -4u -w0 $1 8888
 			sleep 0.5
-			echo -n "GEARTRANSIT:1" | nc -4u -w0 $1 8888
+			echo -n "GEAR_TRANSIT:1" | nc -4u -w0 $1 8888
 			sleep 0.2
-			echo -n "GEARSAFE1:0" | nc -4u -w0 $1 8888
+			echo -n "GEAR_SAFE1:0" | nc -4u -w0 $1 8888
 			sleep 0.2
-			echo -n "GEARSAFE2:0" | nc -4u -w0 $1 8888
+			echo -n "GEAR_SAFE2:0" | nc -4u -w0 $1 8888
 			sleep 0.2
-			echo -n "GEARSAFE3:0" | nc -4u -w0 $1 8888
+			echo -n "GEAR_SAFE3:0" | nc -4u -w0 $1 8888
 			sleep 0.5
-			echo -n "GEARSAFE1:1" | nc -4u -w0 $1 8888
+			echo -n "GEAR_SAFE1:1" | nc -4u -w0 $1 8888
 			sleep 0.5
-			echo -n "GEARSAFE2:1" | nc -4u -w0 $1 8888
+			echo -n "GEAR_SAFE2:1" | nc -4u -w0 $1 8888
 			sleep 0.1
-			echo -n "GEARSAFE3:1" | nc -4u -w0 $1 8888
+			echo -n "GEAR_SAFE3:1" | nc -4u -w0 $1 8888
 			sleep 0.1
-			echo -n "GEARTRANSIT:0" | nc -4u -w0 $1 8888
+			echo -n "GEAR_TRANSIT:0" | nc -4u -w0 $1 8888
 			sleep 0.5
-			echo -n "FLAPTRANSIT:1" | nc -4u -w0 $1 8888
+			echo -n "FLAP_TRANSIT:1" | nc -4u -w0 $1 8888
 			sleep 0.5
-			echo -n "FLAP:0" | nc -4u -w0 $1 8888
+			echo -n "FLAP_APP:1" | nc -4u -w0 $1 8888
 			sleep 0.5
-			echo -n "FLAP:1" | nc -4u -w0 $1 8888
+			echo -n "FLAP_LAND:0" | nc -4u -w0 $1 8888
 			sleep 0.5
-			echo -n "FLAP:2" | nc -4u -w0 $1 8888
+			echo -n "FLAP_APP:0" | nc -4u -w0 $1 8888
 			sleep 0.5
-			echo -n "FLAP:1" | nc -4u -w0 $1 8888
+			echo -n "FLAP_LAND:1" | nc -4u -w0 $1 8888
 			sleep 0.5
-			echo -n "FLAP:0" | nc -4u -w0 $1 8888
-			sleep 0.1
-			echo -n "FLAPTRANSIT:0" | nc -4u -w0 $1 8888
+			echo -n "FLAP_TRANSIT:0" | nc -4u -w0 $1 8888
 			sleep 0.5
 		done
 		sleep 1
 		echo -n "AP_MODE:1" | nc -4u -w0 $1 8888
 		echo -n "FD_MODE:1" | nc -4u -w0 $1 8888
 		echo -n "FLC_MODE:1" | nc -4u -w0 $1 8888
+		echo -n "FLAP_APP:0" | nc -4u -w0 $1 8888
+		echo -n "FLAP_LAND:1" | nc -4u -w0 $1 8888
 		echo "listening for messages from arduino box ${1}"
 		echo "(try toggling switches etc and check to see there are responses below. Ctrl-C to quit)"
 		nc -4u -l  8889
