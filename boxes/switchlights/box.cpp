@@ -31,6 +31,7 @@ struct tBoxState {
 	bool flap0;
 	bool flap1;
 	bool flap2;
+	int  flapPos;
 	bool gearTransit;
 	bool gearSafe0;
 	bool gearSafe1;
@@ -47,6 +48,7 @@ void setStartState(void) {
 	currentState.flap0 = false;
 	currentState.flap1 = false;
 	currentState.flap2 = false;
+	currentState.flapPos = 0;
 	currentState.gearTransit = false;
 	currentState.gearSafe0 = false;
 	currentState.gearSafe1 = false;
@@ -69,33 +71,43 @@ void showAnnunciators() {
 
 void testIndicators() {
 	digitalWrite(GEAR_TRANSIT, 1);
-	delay(400);
+	delay(100);
 	digitalWrite(GEAR_SAFE0, 1);
-	delay(400);
+	delay(100);
 	digitalWrite(GEAR_SAFE1, 1);
-	delay(400);
+	delay(100);
 	digitalWrite(GEAR_SAFE2, 1);
-	delay(400);
+	delay(100);
 	digitalWrite(FLAP_TRANSIT, 1);
-	delay(400);
+	delay(100);
 	digitalWrite(FLAP_SET_APP, 1);
-	delay(400);
+	delay(100);
 	digitalWrite(FLAP_SET_LAND, 1);
-	delay(400);
+	delay(100);
 	digitalWrite(GEAR_TRANSIT, 0);
-	delay(400);
+	delay(100);
 	digitalWrite(GEAR_SAFE0, 0);
-	delay(400);
+	delay(100);
 	digitalWrite(GEAR_SAFE1, 0);
-	delay(400);
+	delay(100);
 	digitalWrite(GEAR_SAFE2, 0);
-	delay(400);
+	delay(100);
 	digitalWrite(FLAP_TRANSIT, 0);
-	delay(400);
+	delay(100);
 	digitalWrite(FLAP_SET_APP, 0);
-	delay(400);
+	delay(100);
 	digitalWrite(FLAP_SET_LAND, 0);
-	delay(400);
+	delay(100);
+}
+
+void interpretFlapState(void) {
+	if (currentState.flap0) {
+		currentState.flapPos = 0;
+	} else if (currentState.flap1) {
+		currentState.flapPos = 1;
+	} if (currentState.flap2) {
+		currentState.flapPos = 2;
+	}
 }
 
 void boxSetup() {
@@ -124,20 +136,25 @@ void boxSetup() {
 	digitalWrite(FLAP_SET_APP, 0);
 	digitalWrite(FLAP_SET_LAND, 0);
 
+	currentState.flap0 = !digitalRead(FLAP0);
+	currentState.flap1 = !digitalRead(FLAP1);
+	currentState.flap2 = !digitalRead(FLAP2);
+	interpretFlapState();
+	currentState.gearSafe0 = digitalRead(LGEAR);
+	currentState.gearSafe1 = digitalRead(LGEAR);
+	currentState.gearSafe2 = digitalRead(LGEAR);
+
 	testIndicators();
 }
 
 void noConnectionActions(void) {
 	fishForPlugin();
+	testIndicators();
 }
 
 void setControl(char* device, char* value) {
 	// act on message from XPlane by setting our systems state
 	unsigned int v = atoi(value);
-	Serial.print("MSG '");
-	Serial.print(device);
-	Serial.print("' = ");
-	Serial.println(value);
 	if (strcmp("GEAR_TRANSIT", device) == 0) {
 		currentState.gearTransit = (v == 1);
 	} 
@@ -159,6 +176,7 @@ void setControl(char* device, char* value) {
 	if (strcmp("FLAP_LAND", device) == 0 ) {
 		currentState.flapLand = (v == 1);
 	}
+	interpretFlapState();
 }
 
 int bouncer = 0;
@@ -170,27 +188,37 @@ void checkSwitches(void) {
 	if (bouncer-- <= 0) {
 		bouncer = 0;
 		bool v = false;
-		v = digitalRead(LGEAR);
+		v = !digitalRead(LGEAR);
 		if (v != currentState.lGear) {
-			markStart(90);
+			markStart(10);
 			currentState.lGear = v;
 		}
-		v = digitalRead(FLAP0);
+		currentState.flap0 = false;
+		currentState.flap1 = false;
+		currentState.flap2 = false;
+		v = !digitalRead(FLAP0);
 		if (v != currentState.flap0) {
-			markStart(50);
-			currentState.flap0 = v;
+			if (v) {
+				markStart(50);
+				currentState.flap0 = v;
+			}
 		}
-		v = digitalRead(FLAP1);
+		v = !digitalRead(FLAP1);
 		if (v != currentState.flap1) {
-			markStart(50);
-			currentState.flap1 = v;
+			if (v) {
+				markStart(50);
+				currentState.flap1 = v;
+			}
 		}
-		v = digitalRead(FLAP2);
+		v = !digitalRead(FLAP2);
 		if (v != currentState.flap2) {
-			markStart(50);
-			currentState.flap2 = v;
+			if (v) {
+				markStart(50);
+				currentState.flap2 = v;
+			}
 		}
 	}
+	interpretFlapState();
 }
 
 void sendChanges() {
@@ -198,25 +226,29 @@ void sendChanges() {
 		sendDataTypeBool("LGEAR", currentState.lGear);
 		prevState.lGear = currentState.lGear;
 	}
-	if (currentState.flap0 != prevState.flap0) {
-		if (!currentState.flap0)
-			sendDataTypeFloat("FLAP_UP", (double)0.0);
-		prevState.flap0 = currentState.flap0;
-	}
-	if (currentState.flap1 != prevState.flap1) {
-		if (!currentState.flap1) {
-			if (!prevState.flap0) {
-				sendDataTypeFloat("FLAP_DOWN", (double)0.5);
-			} else {
-				sendDataTypeFloat("FLAP_UP", (double)0.5);
+	if (currentState.flapPos != prevState.flapPos) {
+		if (currentState.flapPos == 0) {
+			if (prevState.flapPos == 1) {
+				sendDataTypeBool("FLAP_UP", 1);
+			} else if (prevState.flapPos == 2) {
+				sendDataTypeBool("FLAP_UP", 1);
+				sendDataTypeBool("FLAP_UP", 1);
+			}
+		} else if (currentState.flapPos == 1) {
+			if (prevState.flapPos == 0) {
+				sendDataTypeBool("FLAP_DOWN", 1);
+			} else if (prevState.flapPos == 2) {
+				sendDataTypeBool("FLAP_UP", 1);
+			}
+		} else if (currentState.flapPos == 2) {
+			if (prevState.flapPos == 1) {
+				sendDataTypeBool("FLAP_DOWN", 1);
+			} else if (prevState.flapPos == 0) {
+				sendDataTypeBool("FLAP_DOWN", 1);
+				sendDataTypeBool("FLAP_DOWN", 1);
 			}
 		}
-		prevState.flap1 = currentState.flap1;
-	}
-	if (currentState.flap2 != prevState.flap2) {
-		if (!currentState.flap2)
-			sendDataTypeFloat("FLAP_DOWN", (double)1.0);
-		prevState.flap2 = currentState.flap2;
+		prevState.flapPos = currentState.flapPos;
 	}
 }
 
