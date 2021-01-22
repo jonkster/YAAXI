@@ -47,6 +47,12 @@ The box recognises it is in VS mode and when approaching the assigned altitude
 sends the ALT mode to X-Plane.
 
 
+In addition, because there was panel real estate available on the AP facia on
+my setup I used this to add gear and flap annunciator lights that are also
+controlled by the same arduino device that controls the AP.  Obviously not part
+of an autopilot but was convenient.
+
+
 Typical ini values to add to the X-Plane Arduino plugin ini file
 ----------------------------------------------------------------
 
@@ -54,11 +60,19 @@ Typical ini values to add to the X-Plane Arduino plugin ini file
 ################# AUTOPILOT BOX
 # let's call it BOX2
 A:BOX2:192.168.0.192:
-# Initial values to box
+# Initial values to arduino box
 I:AP_ON:0:BOX2
 I:FD_ON:1:BOX2
+# auunciator lights (not part of AP)
+I:GEAR_TRANSIT:0:BOX3
+I:GEAR_SAFE0:1:BOX3
+I:GEAR_SAFE1:1:BOX3
+I:GEAR_SAFE2:1:BOX3
+I:FLAP_TRANSIT:0:BOX3
+I:FLAP_APP:0:BOX3
+I:FLAP_LAND:0:BOX3
 
-# What to do with messages from box
+# What to do with messages from arduino box
 C:AP_TOGGLE:sim/autopilot/servos_toggle::
 C:FD_TOGGLE:sim/autopilot/fdir_toggle::
 C:HDG_TOGGLE:sim/autopilot/heading::
@@ -77,7 +91,7 @@ C:ALT_HU_KNOB:sim/autopilot/altitude_down:sim/autopilot/altitude_up:
 #ALT_TH_KNOB
 #OBS_SYNC_TOGGLE
 
-# What to send to box
+# What to send to arduino box
 D:AP_MODE:sim/cockpit2/annunciators/autopilot::EXACT:BOX2
 D:FD_MODE:sim/cockpit2/annunciators/flight_director::EXACT:BOX2
 D:HDG_MODE:sim/cockpit2/autopilot/heading_mode::EXACT:BOX2
@@ -88,4 +102,13 @@ D:VS_MODE:sim/cockpit2/autopilot/vvi_status::EQ 2?1,0:BOX2
 D:ALT_SEL:sim/cockpit/autopilot/altitude::EXACT:BOX2
 D:AP_VS:sim/cockpit/autopilot/vertical_velocity::EXACT:BOX2
 D:ALTITUDE:sim/cockpit2/gauges/indicators/altitude_ft_pilot::EXACTIFDIFFGT 5?,:BOX2
+# auunciator lights (not part of AP)
+D:FLAP_APP:sim/flightmodel/controls/flaprat::EQ 0.400000?1,0:BOX0
+D:FLAP_LAND:sim/flightmodel/controls/flaprat::EQ 1.000000?1,0:BOX0
+D:FLAP_TRANSIT:sim/flightmodel/controls/flaprat::CHG?1,0:BOX0
+D:GEAR_TRANSIT:sim/cockpit/warnings/annunciators/gear_unsafe::EXACT?,:BOX0
+D:GEAR_SAFE0:sim/flightmodel2/gear/deploy_ratio:0:EQ 1?1,0:BOX0
+D:GEAR_SAFE1:sim/flightmodel2/gear/deploy_ratio:0:EQ 1?1,0:BOX0
+D:GEAR_SAFE2:sim/flightmodel2/gear/deploy_ratio:0:EQ 1?1,0:BOX0
+
 ```

@@ -313,23 +313,25 @@ void setControl(char* device, char* value) {
        	if (strcmp("ALTITUDE", device) == 0) {
 		currentState.altitude = v;
 	} 
-       	if (strcmp("GEARSAFE1", device) == 0) {
+       	if (strcmp("GEAR_SAFE0", device) == 0) {
 		currentState.annucGear1 = (v == 1);
 	}
-       	if (strcmp("GEARSAFE2", device) == 0) {
+       	if (strcmp("GEAR_SAFE1", device) == 0) {
 		currentState.annucGear2 = (v == 1);
 	}
-       	if (strcmp("GEARSAFE3", device) == 0) {
+       	if (strcmp("GEAR_SAFE2", device) == 0) {
 		currentState.annucGear3 = (v == 1);
 	} 
-       	if (strcmp("GEARTRANSIT", device) == 0) {
+       	if (strcmp("GEAR_TRANSIT", device) == 0) {
 		currentState.annucGearTransit = (v == 1);
 	}
-       	if (strcmp("FLAP", device) == 0) {
+       	if (strcmp("FLAP_APP", device) == 0) {
 		currentState.annucFlapApp = (v == 1);
-		currentState.annucFlapFull = (v == 2);
 	} 
-       	if (strcmp("FLAPTRANSIT", device) == 0) {
+       	if (strcmp("FLAP_LAND", device) == 0) {
+		currentState.annucFlapFull = (v == 1);
+	} 
+       	if (strcmp("FLAP_TRANSIT", device) == 0) {
 		currentState.annucFlapTransit = (v == 1);
 	}
 }
