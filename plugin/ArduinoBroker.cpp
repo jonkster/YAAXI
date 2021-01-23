@@ -84,6 +84,8 @@ void		parseInitialEntry(std::string);
 bool 		readIniFile();
 void 		sendAnyChangesToBox();
 
+int		counter;
+
 PLUGIN_API int XPluginStart( char *  outName, char *  outSig, char *  outDesc)
 {
 	XPLMMenuID	myMenu;
@@ -197,7 +199,7 @@ int initialiseSocket(const char* ip, const int port, int& sock, struct sockaddr_
 		addLogMessage("adding broadcast ip to listen for boxes: ", INADDR_ANY);
 		server.sin_addr.s_addr = htonl(INADDR_ANY);
 	} else {
-		addLogMessage("adding specific ip: ", ip);
+		//addLogMessage("adding specific ip: ", ip);
 		server.sin_addr.s_addr = inet_addr(ip);
 	}
 
@@ -210,7 +212,7 @@ int initialiseSocket(const char* ip, const int port, int& sock, struct sockaddr_
 	return 0;
 }
 
-void sendArduino(const char* msg, int writeSock, struct sockaddr_in talkSockAddr) {
+void sendArduino(const char* boxid, const char* msg, int writeSock, struct sockaddr_in talkSockAddr) {
 	int res = sendto(
 			writeSock,
 			msg,
@@ -221,7 +223,9 @@ void sendArduino(const char* msg, int writeSock, struct sockaddr_in talkSockAddr
 	if (res < 0) {
 		addLogMessage("failed to send to box. Error#", strerror(errno));
 	} else {
-		addLogMessage("Sending to box: ", msg);
+		std::stringstream lmsg("");
+		lmsg << "sending to box: " << boxid << " data: " << msg;
+		addLogMessage(lmsg.str().c_str(), "");
 	}
 }
 
@@ -232,7 +236,7 @@ void sendArduinoAtAddress(struct sockaddr_in cliAddr, const char* msg) {
 	if (initialiseSocket(addr, ARDUINO_WRITE_PORT, writeSock, talkSockAddr, false) < 0) {
 		addLogMessage("failed to initialise addr. ", addr);
 	} else {
-		sendArduino(msg, writeSock, talkSockAddr);
+		sendArduino(addr, msg, writeSock, talkSockAddr);
 		closeSocket(writeSock);
 		return;
 	}
@@ -249,7 +253,7 @@ void sendArduinoBox(std::string boxName, const char* msg) {
 		if (initialiseSocket(ipAddress.c_str(), ARDUINO_WRITE_PORT, writeSock, talkSockAddr, false) < 0) {
 			addLogMessage("failed to initialise box addr. ", ipAddress.c_str());
 		} else {
-			sendArduino(msg, writeSock, talkSockAddr);
+			sendArduino(boxName.c_str(), msg, writeSock, talkSockAddr);
 			closeSocket(writeSock);
 			return;
 		}
@@ -614,9 +618,12 @@ void parseInitialEntry(std::string line) {
 			line.erase(0, pos + 1);
 			std::string boxName = line;
 			std::stringstream msg("");
-		        msg << "setting initial value of box " << boxName << " to: " << value;
+		        msg << "setting initial value of " << device << " on box "  << boxName << " to: " << value;
 			addLogMessage(msg.str().c_str(), "");
 			sendArduinoBox(boxName, (device + ":" + value).c_str());
+			msg.str("");
+		        msg << device << " initial value " << value << " sent to " << boxName;
+			addLogMessage(msg.str().c_str(), "");
 			return;
 		}
 	}
@@ -718,6 +725,10 @@ void calculateResponse(std::string boxName, std::string device, std::string oldV
 		opCode = op;
 	}
 	if (oldValue != currentValue) {
+		std::stringstream lmsg("");
+		lmsg << device << " values changed: " << oldValue << " != " << currentValue;
+		addLogMessage(lmsg.str().c_str(), "");
+
 		if (opCode == "CHG") {
 			sendArduinoBox(boxName, (device + ":" + trueResponse).c_str());
 		} else {
@@ -729,7 +740,10 @@ void calculateResponse(std::string boxName, std::string device, std::string oldV
 				std::string opValue = getOpValue(op);
 				bool match = false;
 				if (opCode == "EQ") {
-					match = currentValue == opValue;
+					match = std::stod(currentValue) == std::stod(opValue);
+		lmsg.str("");
+		lmsg << "cf : " << currentValue << " == " << opValue << "?   " << match;
+		addLogMessage(lmsg.str().c_str(), "");
 				} else if (opCode == "EXACT") {
 					sendArduinoBox(boxName, (device + ":" + currentValue).c_str());
 					return;
@@ -763,9 +777,13 @@ void calculateResponse(std::string boxName, std::string device, std::string oldV
 			}
 		}
 	} else {
-		if (opCode == "CHG") {
-			sendArduinoBox(boxName, (device + ":" + falseResponse).c_str());
-		}
+		/*if (opCode == "CHG") {
+			// avoid flooding data - only do every second or so
+			addLogMessage("counter: ", counter++);
+			if (counter % 100 == 0) {
+				sendArduinoBox(boxName, (device + ":" + falseResponse).c_str());
+			}
+		}*/
 	}
 }
 

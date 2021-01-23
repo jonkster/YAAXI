@@ -145,6 +145,7 @@ void showAnnunciators() {
 		if ((millis() - testModeStart) > 1000) {
 			testModeStart = 0;
 			currentState.annucTestMode = false;
+			digitalWrite(FLAP_TRANS, 0);
 		}
 	}
 }
