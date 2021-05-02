@@ -91,19 +91,19 @@ PLUGIN_API int XPluginStart( char *  outName, char *  outSig, char *  outDesc)
 	XPLMMenuID	myMenu;
 	int		mySubMenuItem;
 
-	strncpy(outName, "ArduinoBrokerNEW", sizeof(outName) - 1);
-	strncpy(outSig,  "motioncapture.interface.arduinobroker", sizeof(outSig) - 1);
-	strncpy(outDesc, "A plugin that talks to an Arduino.", sizeof(outDesc) - 1);
+	strncpy(outName, "YAAXI ArduinoBroker", sizeof(outName) - 1);
+	strncpy(outSig,  "kellavia.interface.arduinobroker", sizeof(outSig) - 1);
+	strncpy(outDesc, "A protoype plugin that talks to Arduino based gadgets using YAAXI protocol.", sizeof(outDesc) - 1);
 
 	// setup Menu
 	mySubMenuItem = XPLMAppendMenuItem(
 			XPLMFindPluginsMenu(),	/* Put in plugins menu */
-			"Arduino BrokerNEW",	/* Item Title */
+			"YAAXI Arduino Broker",	/* Item Title */
 			0,			/* Item Ref */
 			1);			/* Force English */
 
 	myMenu = XPLMCreateMenu(
-			"Arduino BrokerNEW", 
+			"YAAXI Arduino Broker", 
 			XPLMFindPluginsMenu(), 
 			mySubMenuItem, 			/* Menu Item to attach to. */
 			menuHandlerCallback,		/* The handler */
