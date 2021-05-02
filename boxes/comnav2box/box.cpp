@@ -6,6 +6,7 @@
 
 // PIN ASSIGNMENTS
 #define FF_SWITCH_PUSH 24
+#define ROT_ENC_SW     A12
 #define FF_SWITCH_LO   25
 
 // LCD backlight and contrast pins
@@ -186,6 +187,7 @@ void boxSetup() {
 
 	// set up switch and encoders
 	pinMode(FF_SWITCH_PUSH, INPUT_PULLUP);
+	pinMode(ROT_ENC_SW, INPUT_PULLUP);
 	pinMode(FF_SWITCH_LO, OUTPUT);
 	digitalWrite(FF_SWITCH_LO, 0);
 	setupEncoders();
@@ -336,8 +338,10 @@ void boxMainLoop(void) {
 		printFreqs();
 		markActiveRadio();
 		// change active unit if button pressed
-		if (checkSwitchPushed()) {
+		bool pushed = (! digitalRead(ROT_ENC_SW));
+		if (pushed) {
 			currentState.activeDisplay = (currentState.activeDisplay+1) % 4;
+			delay(200);
 		} 
 
 		// get changes to frequency
