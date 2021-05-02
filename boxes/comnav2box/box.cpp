@@ -6,7 +6,7 @@
 
 // PIN ASSIGNMENTS
 #define FF_SWITCH_PUSH 24
-#define ROT_ENC_SW     A12
+#define FREQ_PUSH     A12
 #define FF_SWITCH_LO   25
 
 // LCD backlight and contrast pins
@@ -109,25 +109,6 @@ void flipFrequencies() {
 	}
 }
 
-
-
-/* record if flipflop button pushed and set up a delay in re-checking to avoid
- * bounce */
-int flipFlopDelay = 0;
-bool flipFlopPushed() {
-	bool pushed = false;
-	if (flipFlopDelay <= 0) {
-		pushed = (! digitalRead(FF_SWITCH_PUSH));
-		if (pushed) {
-			flipFlopDelay = 20;	
-		}
-	}
-	else {
-		flipFlopDelay--;
-	}
-	return pushed;
-}
-
 void setStartState(void) {
 	// display starting message
 	lcd0.clear();
@@ -187,7 +168,7 @@ void boxSetup() {
 
 	// set up switch and encoders
 	pinMode(FF_SWITCH_PUSH, INPUT_PULLUP);
-	pinMode(ROT_ENC_SW, INPUT_PULLUP);
+	pinMode(FREQ_PUSH, INPUT_PULLUP);
 	pinMode(FF_SWITCH_LO, OUTPUT);
 	digitalWrite(FF_SWITCH_LO, 0);
 	setupEncoders();
@@ -327,22 +308,26 @@ void setControl(char* device, char* value) {
 	} else if (strcmp("N2S", device) == 0) {
 		currentState.n2Stb = v;	
 	} else {
-		if (DEBUG_MODE) {
-			Serial.println("could not find device!");
-		}
 	}
 }
 
+int bouncer = 0;
+void markStart(int delayTime) {
+	bouncer = delayTime;
+}
 
-void boxMainLoop(void) {
-		printFreqs();
-		markActiveRadio();
-		// change active unit if button pressed
-		bool pushed = (! digitalRead(ROT_ENC_SW));
-		if (pushed) {
+void sendChanges() {
+	if (bouncer-- <= 0) {
+		bouncer = 0;
+		
+		if (! digitalRead(FREQ_PUSH)) {
 			currentState.activeDisplay = (currentState.activeDisplay+1) % 4;
-			delay(200);
+			markStart(10);
 		} 
+		if (! digitalRead(FF_SWITCH_PUSH)) {
+			flipFrequencies();
+			markStart(10);
+		}
 
 		// get changes to frequency
 		int incKhz = getEncoderDir(0);
@@ -388,7 +373,11 @@ void boxMainLoop(void) {
 			}
 		}
 
-		if (flipFlopPushed()) {
-			flipFrequencies();
-		}
+	}
+}
+
+void boxMainLoop(void) {
+		printFreqs();
+		markActiveRadio();
+		sendChanges();
 }
