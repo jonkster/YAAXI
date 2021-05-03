@@ -9,10 +9,10 @@ PROJECT_DIR       = $(shell dirname $(shell pwd))/..
 
 ### ARDMK_DIR
 ### Path to the Arduino-Makefile directory.
-ARDMK_DIR         = /usr/share/arduino
+ARDMK_DIR         = /home/jonk/KELLY/arduino-src/Arduino-Makefile
 
 ### ARDUINO_DIR
-ARDUINO_DIR       = /usr/share/arduino
+ARDUINO_DIR       = /home/jonk/KELLY/arduino-src/arduino-1.8.13
 
 ### USER_LIB_PATH
 ### Path to where the your project's libraries are stored.
@@ -23,8 +23,8 @@ ARDUINO_LIBS      += LiquidCrystal encoderlib communication Ethernet SPI
 
 ### BOARD_TAG & BOARD_SUB
 #BOARD_TAG         = uno
-BOARD_TAG         = mega2560
-#BOARD_SUB         = atmega2560
+BOARD_TAG         = mega
+BOARD_SUB         = atmega2560
 
 ### MONITOR_PORT
 #MONITOR_PORT      = /dev/ttyUSB*

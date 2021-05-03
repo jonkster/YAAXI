@@ -25,6 +25,7 @@ else
 	sleep 3
 	echo "listening for messages from arduino box ${1}"
 	echo "(try setting switches, turning knobs on box and check to see there are responses below...)"
+	echo "NB in this test script the flipflop button doesn't work"
 	while [ true ]	
 	do
 		RESPONSE=`nc -4u -w0 -l  8889` 
@@ -46,7 +47,8 @@ else
 				COM1=$((${COM1} + 5))
 				echo -n "C1S:${COM1}" | nc -4u -w0 $1 8888
 				;;
-			"MHZ_KNOB_COM1:2")
+
+			"MHZ_KNOB_COM2:1")
 				COM1=$((${COM1} - 100))
 				echo -n "C2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
@@ -62,6 +64,7 @@ else
 				COM1=$((${COM1} + 5))
 				echo -n "C2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
+
 			"MHZ_KNOB_NAV1:1")
 				COM1=$((${COM1} - 100))
 				echo -n "N1S:${COM1}" | nc -4u -w0 $1 8888
@@ -78,21 +81,34 @@ else
 				COM1=$((${COM1} + 5))
 				echo -n "N1S:${COM1}" | nc -4u -w0 $1 8888
 				;;
-			"MHZ_KNOB_NAV1:2")
+
+			"MHZ_KNOB_NAV2:1")
 				COM1=$((${COM1} - 100))
 				echo -n "N2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
-			"MHZ_KNOB_NAV1")
+			"MHZ_KNOB_NAV2:-1")
 				COM1=$((${COM1} + 100))
 				echo -n "N2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
-			"KHZ_KNOB_NAV1")
+			"KHZ_KNOB_NAV2:1")
 				COM1=$((${COM1} - 5))
 				echo -n "N2S:${COM1}" | nc -4u -w0 $1 8888
 				;;
-			"KHZ_KNOB_NAV1")
+			"KHZ_KNOB_NAV2:-1")
 				COM1=$((${COM1} + 5))
 				echo -n "N2S:${COM1}" | nc -4u -w0 $1 8888
+				;;
+			"FLIP_COM1:1")
+				echo "Flip Flop not implemented in simulation scripts - should work in real life"
+				;;
+			"FLIP_COM2:1")
+				echo "Flip Flop not implemented in simulation scripts - should work in real life"
+				;;
+			"FLIP_NAV1:1")
+				echo "Flip Flop not implemented in simulation scripts - should work in real life"
+				;;
+			"FLIP_NAV2:1")
+				echo "Flip Flop not implemented in simulation scripts - should work in real life"
 				;;
 		esac
 	done

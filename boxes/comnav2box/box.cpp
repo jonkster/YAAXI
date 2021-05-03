@@ -6,7 +6,8 @@
 
 // PIN ASSIGNMENTS
 #define FF_SWITCH_PUSH 24
-#define FREQ_PUSH     A12
+#define FREQ_PUSH      20
+#define FREQ_PUSH_GND  19
 #define FF_SWITCH_LO   25
 
 // LCD backlight and contrast pins
@@ -169,8 +170,13 @@ void boxSetup() {
 	// set up switch and encoders
 	pinMode(FF_SWITCH_PUSH, INPUT_PULLUP);
 	pinMode(FREQ_PUSH, INPUT_PULLUP);
+
+	pinMode(FREQ_PUSH_GND, OUTPUT);
+	digitalWrite(FREQ_PUSH_GND, 0);
+
 	pinMode(FF_SWITCH_LO, OUTPUT);
 	digitalWrite(FF_SWITCH_LO, 0);
+
 	setupEncoders();
 
 	delay(200);
@@ -333,9 +339,7 @@ void sendChanges() {
 		int incKhz = getEncoderDir(0);
 		int incMhz = getEncoderDir(1);
 		if (incKhz != 0) {
-			if (incKhz == -1) {
-				incKhz = 0;
-			}
+			incKhz = incKhz % 2;
 			switch(currentState.activeDisplay) {
 				case 0:
 					sendDataTypeInt("KHZ_KNOB_COM1", incKhz);
@@ -353,9 +357,8 @@ void sendChanges() {
 			}
 		}
 		if (incMhz != 0) {
-			if (incMhz == -1) {
-				incMhz = 0;
-			}
+			incMhz = incMhz % 2;
+			Serial.print("incMhz:"); Serial.println(incMhz);
 			switch(currentState.activeDisplay) {
 				case 0:
 					sendDataTypeInt("MHZ_KNOB_COM1", incMhz);
